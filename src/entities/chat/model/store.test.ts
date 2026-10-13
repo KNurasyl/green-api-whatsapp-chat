@@ -7,6 +7,21 @@ const lid = '123456789012345@lid'
 const message = { id: 'message-1', text: 'Привет', direction: 'incoming' as const, timestamp: 1000 }
 
 describe('chats', () => {
+  it('clears only the sent draft and resolves its address after a chat merge', () => {
+    const store = createChatStore()
+    store.getState().openChat({ apiChatId: phone })
+    store.getState().setDraft(phone, 'Привет')
+    store.getState().openChat({ apiChatId: lid })
+    store.getState().openChat({ apiChatId: lid, aliases: [phone] })
+    store.getState().confirmSend(phone, { ...message, direction: 'outgoing' })
+
+    expect(store.getState().chats[0]?.draft).toBe('')
+    expect(store.getState().chats[0]?.messages).toHaveLength(1)
+    store.getState().setDraft(lid, 'Следующее сообщение')
+    store.getState().confirmSend(phone, { ...message, id: 'message-2', direction: 'outgoing' })
+    expect(store.getState().chats[0]?.draft).toBe('Следующее сообщение')
+  })
+
   it('keeps drafts separate when switching chats', () => {
     const store = createChatStore()
     const first = store.getState().openChat({ apiChatId: phone })

@@ -9,12 +9,18 @@ export type ChatState = {
   selectChat: (id: string | null) => void
   setDraft: (id: string, text: string) => void
   addMessage: (id: string, message: Message) => void
+  confirmSend: (id: string, message: Message) => void
 }
 
 export const createChatStore = () =>
   createStore<ChatState>()((set, get) => ({
     chats: [],
     activeChatId: null,
+    confirmSend: (id, message) => {
+      get().addMessage(id, message)
+      const chat = findChat(get().chats, id)
+      if (chat?.draft === message.text) get().setDraft(id, '')
+    },
     openChat: (input, select = true) => {
       const state = get()
       const result = mergeChat(state.chats, input, state.activeChatId)
