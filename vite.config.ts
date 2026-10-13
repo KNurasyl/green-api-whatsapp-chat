@@ -1,5 +1,6 @@
+import { fileURLToPath, URL } from 'node:url'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [react()],
@@ -8,5 +9,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  test: {
+    environment: 'node',
+  },
 })
-import { fileURLToPath, URL } from 'node:url'
