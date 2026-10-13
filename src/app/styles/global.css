@@ -12,13 +12,13 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --color-bg: #f5f7f4;
+  --color-bg: #f4f5f8;
   --color-panel: #fff;
-  --color-text: #1d3028;
-  --color-muted: #6c7a71;
-  --color-accent: #21694f;
-  --color-border: #e2e8e1;
-  --color-hover: #eef3ed;
+  --color-text: #20212b;
+  --color-muted: #777b8b;
+  --color-accent: #4968ed;
+  --color-border: #e8e9ef;
+  --color-hover: #f0f2fa;
   --color-error: #a43232;
   --color-error-bg: #fff1ef;
 }
@@ -46,7 +46,7 @@ textarea {
 }
 ::selection {
   color: var(--color-text);
-  background: #cae5d5;
+  background: #dce3ff;
 }
 @media (prefers-reduced-motion: reduce) {
   *,
