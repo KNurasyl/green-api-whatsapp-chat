@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { Notification } from '../api/notification'
-import { pollNotifications } from './poll'
+import type { Notification } from '@/features/receive-messages/api/notification'
+import { pollNotifications } from '@/features/receive-messages/model/poll'
 
 const notification: Notification = { receiptId: 123, event: { type: 'skip' } }
 

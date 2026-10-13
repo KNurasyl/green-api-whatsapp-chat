@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { parseConnection } from './connection'
-import { request } from './request'
+import { parseConnection } from '@/shared/api/connection'
+import { request } from '@/shared/api/request'
 
 const connection = {
   apiUrl: 'https://test.api.greenapi.com',

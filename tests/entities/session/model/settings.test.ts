@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { checkSettings } from './settings'
+import { checkSettings } from '@/entities/session/model/settings'
 
 const settings = { webhookUrl: '', incoming: true, stateChanges: true, statuses: false }
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { mergeDelivery } from './status'
-import { createChatStore } from './store'
+import { mergeDelivery } from '@/entities/chat/model/status'
+import { createChatStore } from '@/entities/chat/model/store'
 
 describe('delivery status', () => {
   it('never downgrades delivery progress because an older event arrives late', () => {

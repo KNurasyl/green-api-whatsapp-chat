@@ -5,10 +5,10 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { ChatProvider, MessageList, findChat, useChatStore, useChatStoreApi } from '@/entities/chat'
 import { useSession } from '@/entities/session'
 import { apiError } from '@/shared/api'
-import { sendMessage } from '../api/sendMessage'
-import { MessageComposer } from '../ui/MessageComposer'
+import { sendMessage } from '@/features/send-message/api/sendMessage'
+import { MessageComposer } from '@/features/send-message/ui/MessageComposer'
 
-vi.mock('../api/sendMessage', () => ({ sendMessage: vi.fn() }))
+vi.mock('@/features/send-message/api/sendMessage', () => ({ sendMessage: vi.fn() }))
 
 const firstChat = '79990000000@c.us'
 const secondChat = '79991111111@c.us'

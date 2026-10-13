@@ -45,6 +45,13 @@ export default defineConfig([
     },
   },
   {
+    files: ['tests/**/*.{ts,tsx}'],
+    extends: [reactHooks.configs.flat.recommended],
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.node },
+    },
+  },
+  {
     files: ['*.config.{js,ts}'],
     languageOptions: {
       globals: globals.node,

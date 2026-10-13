@@ -5,10 +5,13 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { ChatProvider } from '@/entities/chat'
 import { useSession } from '@/entities/session'
 import { apiError } from '@/shared/api'
-import { receiveNotification } from '../api/queue'
-import { useReceiveMessages } from './useReceiveMessages'
+import { receiveNotification } from '@/features/receive-messages/api/queue'
+import { useReceiveMessages } from '@/features/receive-messages/model/useReceiveMessages'
 
-vi.mock('../api/queue', () => ({ receiveNotification: vi.fn(), deleteNotification: vi.fn() }))
+vi.mock('@/features/receive-messages/api/queue', () => ({
+  receiveNotification: vi.fn(),
+  deleteNotification: vi.fn(),
+}))
 
 const client = new QueryClient()
 const Wrapper = ({ children }: PropsWithChildren) => (

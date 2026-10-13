@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { getMessageError, getSendError } from '../lib/message'
-import { sendMessage } from './sendMessage'
+import { getMessageError, getSendError } from '@/features/send-message/lib/message'
+import { sendMessage } from '@/features/send-message/api/sendMessage'
 
 const connection = {
   apiUrl: 'https://api.green-api.com',

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { normalizePhone } from '../lib/phone'
-import { checkWhatsapp } from './checkWhatsapp'
+import { normalizePhone } from '@/features/create-chat/lib/phone'
+import { checkWhatsapp } from '@/features/create-chat/api/checkWhatsapp'
 
 const connection = {
   apiUrl: 'https://api.green-api.com',

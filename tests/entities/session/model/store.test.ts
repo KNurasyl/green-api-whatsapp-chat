@@ -1,5 +1,5 @@
 import { afterEach, expect, it } from 'vitest'
-import { useSession } from './store'
+import { useSession } from '@/entities/session/model/store'
 
 const connection = {
   apiUrl: 'https://api.green-api.com',

@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { apiError } from '@/shared/api'
 import { delay } from '@/shared/lib/delay'
-import { canRetry, retryDelay } from '../lib/retry'
-import type { Notification } from '../api/notification'
-import { pollNotifications } from './poll'
+import { canRetry, retryDelay } from '@/features/receive-messages/lib/retry'
+import type { Notification } from '@/features/receive-messages/api/notification'
+import { pollNotifications } from '@/features/receive-messages/model/poll'
 
 afterEach(() => vi.useRealTimers())
 

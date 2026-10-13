@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { getChatName } from './chat'
-import { createChatStore } from './store'
+import { getChatName } from '@/entities/chat/model/chat'
+import { createChatStore } from '@/entities/chat/model/store'
 
 const phone = '79990000000@c.us'
 const lid = '123456789012345@lid'

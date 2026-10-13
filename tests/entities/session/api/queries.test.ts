@@ -1,6 +1,6 @@
 import { QueryClient } from '@tanstack/react-query'
 import { afterEach, expect, it, vi } from 'vitest'
-import { settingsQuery, stateQuery } from './queries'
+import { settingsQuery, stateQuery } from '@/entities/session/api/queries'
 
 const connection = {
   apiUrl: 'https://api.green-api.com',

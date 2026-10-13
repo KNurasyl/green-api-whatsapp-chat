@@ -11,8 +11,8 @@ export default defineConfig({
   },
   test: {
     projects: [
-      { test: { name: 'unit', environment: 'node', include: ['src/**/*.test.ts'] } },
-      { test: { name: 'ui', environment: 'jsdom', include: ['src/**/*.test.tsx'] } },
+      { test: { name: 'unit', environment: 'node', include: ['tests/**/*.test.ts'] } },
+      { test: { name: 'ui', environment: 'jsdom', include: ['tests/**/*.test.tsx'] } },
     ],
   },
 })

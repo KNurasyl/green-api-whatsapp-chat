@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { useSession } from '@/entities/session'
-import { ConnectionForm } from '../ui/ConnectionForm'
+import { ConnectionForm } from '@/features/connect/ui/ConnectionForm'
 
 const client = new QueryClient()
 const Wrapper = ({ children }: PropsWithChildren) => (

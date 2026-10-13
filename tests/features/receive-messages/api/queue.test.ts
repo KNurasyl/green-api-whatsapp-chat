@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { deleteNotification, receiveNotification } from './queue'
+import { deleteNotification, receiveNotification } from '@/features/receive-messages/api/queue'
 
 const input = {
   connection: {
