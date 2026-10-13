@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { ChatPage } from '@/pages/chat'
 import { ConnectPage } from '@/pages/connect'
+import { ChatProvider } from '@/entities/chat'
 import { useSession } from '@/entities/session'
 
 export const App = () => {
@@ -15,5 +16,11 @@ export const App = () => {
     close()
   }
 
-  return session ? <ChatPage key={session.id} onSignOut={signOut} /> : <ConnectPage />
+  return session ? (
+    <ChatProvider key={session.id}>
+      <ChatPage onSignOut={signOut} />
+    </ChatProvider>
+  ) : (
+    <ConnectPage />
+  )
 }
