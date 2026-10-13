@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { findChat, useChatStoreApi } from '@/entities/chat'
-import { settingsQuery, stateQuery, useSession } from '@/entities/session'
+import { checkSettings, settingsQuery, stateQuery, useSession } from '@/entities/session'
 import { apiError, getErrorMessage } from '@/shared/api'
 import { delay } from '@/shared/lib/delay'
 import { deleteNotification, receiveNotification } from '../api/queue'
@@ -65,12 +65,7 @@ export const useReceiveMessages = () => {
           await delay(Math.max(0, 1000 - (Date.now() - updatedAt)), signal)
           const settings = await client.fetchQuery(query)
           signal.throwIfAborted()
-          if (settings.webhookUrl || !settings.incoming) {
-            throw apiError(
-              'validation',
-              'Очистите webhookUrl и включите входящие уведомления в кабинете GREEN-API.',
-            )
-          }
+          checkSettings(settings)
         }
         if (client.getQueryData(query.queryKey)?.statuses === false) {
           setNotice('Статусы доставки отключены в настройках инстанса.')
