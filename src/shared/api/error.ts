@@ -1,18 +1,22 @@
-import type { ErrorKind } from './types'
+import type { ApiError, ErrorKind } from './types'
 
-export const apiError = (kind: ErrorKind, message: string, status?: number, retryAfter?: number) =>
-  Object.assign(new Error(message), { name: 'ApiError', kind, status, retryAfter })
+export const apiError = (
+  kind: ErrorKind,
+  message: string,
+  status?: number,
+  retryAfter?: number,
+): ApiError => Object.assign(new Error(message), { name: 'ApiError', kind, status, retryAfter })
 
-export const isApiError = (error: unknown): error is ReturnType<typeof apiError> =>
+export const isApiError = (error: unknown): error is ApiError =>
   error instanceof Error && error.name === 'ApiError' && 'kind' in error
 
-export const isAborted = (error: unknown) =>
+export const isAborted = (error: unknown): boolean =>
   error instanceof DOMException && error.name === 'AbortError'
 
-export const getErrorMessage = (error: unknown) =>
+export const getErrorMessage = (error: unknown): string =>
   isApiError(error) ? error.message : 'Не удалось выполнить действие. Попробуйте ещё раз.'
 
-export const httpError = (status: number, retryAfter?: number) => {
+export const httpError = (status: number, retryAfter?: number): ApiError => {
   const messages: Record<number, string> = {
     400: 'GREEN-API отклонил запрос. Проверьте данные и настройки инстанса.',
     401: 'Не удалось подключиться. Проверьте ID инстанса и токен.',

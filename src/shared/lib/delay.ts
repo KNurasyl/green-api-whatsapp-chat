@@ -1,7 +1,8 @@
-export const delay = (milliseconds: number, signal: AbortSignal) =>
+export const delay = (milliseconds: number, signal: AbortSignal): Promise<void> =>
   new Promise<void>((resolve, reject) => {
     if (signal.aborted) {
       reject(new DOMException('Aborted', 'AbortError'))
+
       return
     }
 
@@ -13,5 +14,6 @@ export const delay = (milliseconds: number, signal: AbortSignal) =>
       signal.removeEventListener('abort', cancel)
       resolve()
     }, milliseconds)
+
     signal.addEventListener('abort', cancel, { once: true })
   })

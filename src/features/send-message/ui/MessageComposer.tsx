@@ -1,12 +1,16 @@
-import { useEffect, useId, useRef, type FormEvent, type KeyboardEvent } from 'react'
-import { useChatStore, type Chat } from '@/entities/chat'
+import type { JSX } from 'react'
+import { type FormEvent, type KeyboardEvent, useEffect, useId, useRef } from 'react'
+
+import { type Chat, useChatStore } from '@/entities/chat'
 import { Button } from '@/shared/ui/button'
+
 import { useSendMessage } from '../model/useSendMessage'
+
 import styles from './MessageComposer.module.css'
 
-type Props = { chat: Chat; disabled?: boolean }
+type MessageComposerProps = { chat: Chat; disabled?: boolean }
 
-export const MessageComposer = ({ chat, disabled = false }: Props) => {
+export const MessageComposer = ({ chat, disabled = false }: MessageComposerProps): JSX.Element => {
   const setDraft = useChatStore((state) => state.setDraft)
   const { send, isSending, error } = useSendMessage(chat)
   const hintId = useId()
@@ -16,16 +20,19 @@ export const MessageComposer = ({ chat, disabled = false }: Props) => {
     input.current?.focus()
   }, [chat.id])
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault()
     if (disabled || isSending) return
+
     send()
   }
 
-  const keyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+  const keyDown = (event: KeyboardEvent<HTMLTextAreaElement>): void => {
     if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return
+
     event.preventDefault()
     if (disabled || isSending) return
+
     send()
   }
 

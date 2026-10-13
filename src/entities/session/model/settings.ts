@@ -14,6 +14,7 @@ export const checkSettings = (settings: Settings) => {
       'В кабинете включите входящие уведомления и очистите адрес отправки уведомлений (webhookUrl).',
     )
   }
+
   if (!settings.stateChanges) {
     throw apiError(
       'validation',

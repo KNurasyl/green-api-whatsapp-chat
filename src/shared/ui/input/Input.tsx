@@ -1,12 +1,14 @@
-import { useId, type ComponentProps } from 'react'
+import type { JSX } from 'react'
+import { type ComponentProps, useId } from 'react'
+
 import styles from './Input.module.css'
 
-type Props = ComponentProps<'input'> & {
+type InputProps = ComponentProps<'input'> & {
   label: string
   hint?: string
 }
 
-export const Input = ({ label, hint, id: suppliedId, ...props }: Props) => {
+export const Input = ({ label, hint, id: suppliedId, ...props }: InputProps): JSX.Element => {
   const generatedId = useId()
   const id = suppliedId ?? generatedId
   const hintId = `${id}-hint`

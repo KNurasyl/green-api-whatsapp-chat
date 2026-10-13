@@ -1,8 +1,14 @@
+import type { Delivery } from './status'
+
 export type Message = {
   id: string
   text: string
   direction: 'incoming' | 'outgoing'
   timestamp: number
+}
+
+export type ChatMessage = Message & {
+  order: number
 }
 
 export type Chat = {
@@ -11,7 +17,7 @@ export type Chat = {
   aliases: string[]
   phone?: string
   name?: string
-  messages: (Message & { order: number })[]
+  messages: ChatMessage[]
   draft: string
   statuses: Map<string, Delivery>
 }
@@ -22,4 +28,3 @@ export type ChatInput = {
   phone?: string
   name?: string
 }
-import type { Delivery } from './status'

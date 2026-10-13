@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { Notification } from '../api/notification'
-import { pollNotifications } from './poll'
+
+import type { Notification } from '@/features/receive-messages/api/notification'
+import { pollNotifications } from '@/features/receive-messages/model/poll'
 
 const notification: Notification = { receiptId: 123, event: { type: 'skip' } }
 
@@ -26,10 +27,12 @@ describe('notification queue', () => {
       afterEvent: () => {
         order.push('after')
         controller.abort()
+
         return Promise.resolve()
       },
     })
     const done = expect(task).rejects.toMatchObject({ name: 'AbortError' })
+
     await vi.waitFor(() => expect(order).toEqual(['apply', 'ack 123']))
     expect(receive).toHaveBeenCalledTimes(1)
     release()
@@ -42,6 +45,7 @@ describe('notification queue', () => {
     const acknowledge = vi
       .fn<(id: number) => Promise<void>>()
       .mockRejectedValue(new Error('ack failed'))
+
     await expect(
       pollNotifications({
         signal: new AbortController().signal,
@@ -59,11 +63,13 @@ describe('notification queue', () => {
     const controller = new AbortController()
     const apply = vi.fn()
     const acknowledge = vi.fn<(id: number) => Promise<void>>()
+
     await expect(
       pollNotifications({
         signal: controller.signal,
         receive: () => {
           controller.abort()
+
           return Promise.resolve(notification)
         },
         acknowledge,

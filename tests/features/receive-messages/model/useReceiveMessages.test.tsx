@@ -1,14 +1,18 @@
-import type { PropsWithChildren } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
+import type { PropsWithChildren } from 'react'
 import { afterEach, expect, it, vi } from 'vitest'
+
 import { ChatProvider } from '@/entities/chat'
 import { useSession } from '@/entities/session'
+import { receiveNotification } from '@/features/receive-messages/api/queue'
+import { useReceiveMessages } from '@/features/receive-messages/model/useReceiveMessages'
 import { apiError } from '@/shared/api'
-import { receiveNotification } from '../api/queue'
-import { useReceiveMessages } from './useReceiveMessages'
 
-vi.mock('../api/queue', () => ({ receiveNotification: vi.fn(), deleteNotification: vi.fn() }))
+vi.mock('@/features/receive-messages/api/queue', () => ({
+  receiveNotification: vi.fn(),
+  deleteNotification: vi.fn(),
+}))
 
 const client = new QueryClient()
 const Wrapper = ({ children }: PropsWithChildren) => (
@@ -26,12 +30,7 @@ afterEach(() => {
 })
 
 it('keeps receiving paused until authorization events are enabled again', async () => {
-  useSession
-    .getState()
-    .open(
-      { apiUrl: 'https://api.green-api.com', idInstance: '123', apiTokenInstance: 'test-token' },
-      'test-session',
-    )
+  useSession.getState().open('test-session')
   vi.mocked(receiveNotification)
     .mockRejectedValueOnce(apiError('response', 'Получение приостановлено'))
     .mockImplementation(
@@ -60,6 +59,7 @@ it('keeps receiving paused until authorization events are enabled again', async 
       ),
   )
   const { result } = renderHook(useReceiveMessages, { wrapper: Wrapper })
+
   await waitFor(() => expect(result.current.status).toBe('paused'))
 
   act(() => result.current.resume())

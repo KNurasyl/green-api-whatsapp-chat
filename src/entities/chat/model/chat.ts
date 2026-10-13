@@ -1,20 +1,58 @@
-import type { Chat, ChatInput } from './types'
-import { mergeDelivery, type Delivery } from './status'
+import { type Delivery, mergeDelivery } from './status'
+import type { Chat, ChatInput, ChatMessage } from './types'
 
-export const isDirectChat = (id: string) => /^\d+@(c\.us|lid)$/.test(id)
+type MergeResult = {
+  chats: Chat[]
+  chat: Chat
+  activeChatId: string | null
+}
 
-export const findChat = (chats: Chat[], id: string) =>
+export const isDirectChat = (id: string): boolean => /^\d+@(c\.us|lid)$/.test(id)
+
+export const findChat = (chats: Chat[], id: string): Chat | undefined =>
   chats.find((chat) => chat.id === id || chat.aliases.includes(id))
 
-export const getChatName = (chat: Chat) => {
+export const getChatName = (chat: Chat): string => {
   if (chat.name) return chat.name
+
   if (chat.phone) return `+${chat.phone}`
+
   if (chat.apiChatId.endsWith('@c.us')) return `+${chat.apiChatId.split('@')[0]}`
 
   return 'Контакт WhatsApp'
 }
 
-export const mergeChat = (chats: Chat[], input: ChatInput, activeId: string | null) => {
+const mergeMessages = (chats: Chat[]): ChatMessage[] => {
+  const messages = new Map<string, ChatMessage>()
+
+  for (const chat of chats) {
+    for (const message of chat.messages) {
+      const previous = messages.get(message.id)
+
+      if (!previous || message.order < previous.order) messages.set(message.id, message)
+    }
+  }
+
+  return [...messages.values()].sort((first, second) => first.order - second.order)
+}
+
+const mergeStatuses = (chats: Chat[]): Map<string, Delivery> => {
+  const statuses = new Map<string, Delivery>()
+
+  for (const chat of chats) {
+    for (const [id, delivery] of chat.statuses) {
+      statuses.set(id, mergeDelivery(statuses.get(id), delivery))
+    }
+  }
+
+  return statuses
+}
+
+export const mergeChat = (
+  chats: Chat[],
+  input: ChatInput,
+  activeId: string | null,
+): MergeResult => {
   const aliases = [...new Set([input.apiChatId, ...(input.aliases ?? [])])]
   const matches = chats.filter((chat) => chat.aliases.some((alias) => aliases.includes(alias)))
   const primary = matches.find((chat) => chat.id === activeId) ?? matches[0]
@@ -28,37 +66,29 @@ export const mergeChat = (chats: Chat[], input: ChatInput, activeId: string | nu
       draft: '',
       statuses: new Map(),
     }
+
     return { chats: [...chats, chat], chat, activeChatId: activeId }
   }
 
   const ordered = [primary, ...matches.filter((chat) => chat.id !== primary.id)]
-  const messages = new Map<string, Chat['messages'][number]>()
   const drafts = [...new Set(ordered.map((chat) => chat.draft).filter(Boolean))]
-  const statuses = new Map<string, Delivery>()
-  for (const chat of ordered) {
-    for (const message of chat.messages) {
-      const previous = messages.get(message.id)
-      if (!previous || message.order < previous.order) messages.set(message.id, message)
-    }
-    for (const [id, delivery] of chat.statuses) {
-      statuses.set(id, mergeDelivery(statuses.get(id), delivery))
-    }
-  }
+
   const merged: Chat = {
     ...primary,
     apiChatId: input.apiChatId,
     aliases: [...new Set([...aliases, ...ordered.flatMap((chat) => chat.aliases)])],
     phone: input.phone ?? ordered.find((chat) => chat.phone)?.phone,
     name: input.name || ordered.find((chat) => chat.name)?.name,
-    messages: [...messages.values()].sort((first, second) => first.order - second.order),
+    messages: mergeMessages(ordered),
     draft: drafts.join('\n'),
-    statuses,
+    statuses: mergeStatuses(ordered),
   }
   const ids = new Set(matches.map((chat) => chat.id))
 
   return {
     chats: chats.flatMap((chat) => {
       if (chat.id === primary.id) return [merged]
+
       return ids.has(chat.id) ? [] : [chat]
     }),
     chat: merged,
