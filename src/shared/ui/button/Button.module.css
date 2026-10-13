@@ -18,7 +18,7 @@
   background: var(--color-accent);
 }
 .primary:hover:not(:disabled) {
-  background: #14533e;
+  background: #3653d1;
 }
 .ghost {
   color: var(--color-text);

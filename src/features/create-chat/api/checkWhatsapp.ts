@@ -1,11 +1,11 @@
 import { isDirectChat } from '@/entities/chat'
-import { apiError, isRecord, request } from '@/shared/api'
+import { apiError, type ApiSession, isRecord, request } from '@/shared/api'
 
-export const checkWhatsapp = async (phone: string, signal: AbortSignal): Promise<string> => {
+export const checkWhatsapp = async (phone: string, session: ApiSession): Promise<string> => {
   const data = await request('checkWhatsapp', {
     method: 'POST',
     body: { chatId: `${phone}@c.us` },
-    signal,
+    ...session,
   })
 
   if (!isRecord(data) || typeof data.existsWhatsapp !== 'boolean') {

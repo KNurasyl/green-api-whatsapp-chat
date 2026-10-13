@@ -3,6 +3,7 @@ import { queryOptions } from '@tanstack/react-query'
 import { apiError, isRecord, request } from '@/shared/api'
 
 import type { Settings } from '../model/settings'
+import type { Session } from '../model/store'
 
 const defaults = {
   staleTime: 0,
@@ -11,13 +12,13 @@ const defaults = {
   refetchOnReconnect: false,
 }
 
-export const stateQuery = (sessionId: string) =>
+export const stateQuery = (session: Pick<Session, 'id' | 'key'>) =>
   queryOptions({
     ...defaults,
-    queryKey: ['session', sessionId, 'state'],
+    queryKey: ['session', session.id, 'state'],
     networkMode: 'always',
     queryFn: async ({ signal }): Promise<string> => {
-      const data = await request('getStateInstance', { signal })
+      const data = await request('getStateInstance', { signal, key: session.key })
 
       if (!isRecord(data) || typeof data.stateInstance !== 'string' || !data.stateInstance) {
         throw apiError('response', 'Не удалось определить состояние инстанса.')
@@ -27,13 +28,13 @@ export const stateQuery = (sessionId: string) =>
     },
   })
 
-export const settingsQuery = (sessionId: string) =>
+export const settingsQuery = (session: Pick<Session, 'id' | 'key'>) =>
   queryOptions({
     ...defaults,
-    queryKey: ['session', sessionId, 'settings'],
+    queryKey: ['session', session.id, 'settings'],
     networkMode: 'always',
     queryFn: async ({ signal }): Promise<Settings> => {
-      const data = await request('getSettings', { signal })
+      const data = await request('getSettings', { signal, key: session.key })
 
       if (
         !isRecord(data) ||

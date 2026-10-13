@@ -58,7 +58,7 @@ const submit = (text: string) => {
 }
 
 beforeEach(() => {
-  useSession.getState().open('test-session')
+  useSession.getState().open('test-session', 'test-key')
 })
 
 afterEach(() => {

@@ -80,7 +80,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['*.config.{js,ts}', 'server/**/*.ts'],
+    files: ['*.config.{js,ts}', 'server/**/*.ts', 'api/**/*.ts'],
     languageOptions: {
       globals: globals.node,
     },

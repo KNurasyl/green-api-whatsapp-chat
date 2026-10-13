@@ -3,6 +3,7 @@ import type { ApiMethod } from './types'
 
 type RequestOptions = {
   signal?: AbortSignal
+  key?: string
   method?: 'GET' | 'POST' | 'DELETE'
   body?: Record<string, unknown>
   timeout?: number
@@ -41,27 +42,17 @@ export const request = async (
       method: options.method ?? 'GET',
       headers: {
         'X-Chat-Client': 'web',
+        ...(options.key ? { 'X-Chat-Session': options.key } : {}),
         ...(options.body ? { 'Content-Type': 'application/json' } : {}),
       },
       body: options.body ? JSON.stringify(options.body) : undefined,
-      credentials: 'omit',
+      credentials: 'same-origin',
       redirect: 'error',
       cache: 'no-store',
       signal,
     })
 
     if (!response.ok) {
-      if (response.status === 503) {
-        const data: unknown = await response.json().catch(() => null)
-
-        if (isRecord(data) && data.error === 'configuration') {
-          throw apiError(
-            'validation',
-            'Настройте GREEN-API в серверном .env и перезапустите приложение.',
-          )
-        }
-      }
-
       throw httpError(response.status, readRetryAfter(response.headers.get('Retry-After')))
     }
 

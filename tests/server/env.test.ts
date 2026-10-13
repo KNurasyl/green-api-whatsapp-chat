@@ -34,7 +34,7 @@ describe('server environment', () => {
 
   it('never includes invalid secret values in the error', () => {
     expect(() => readEnv({ ...env, GREEN_API_TOKEN: 'secret with spaces' })).toThrow(
-      'Проверьте GREEN_API_INSTANCE_ID и GREEN_API_TOKEN в .env.',
+      'Проверьте ID и токен инстанса.',
     )
   })
 })

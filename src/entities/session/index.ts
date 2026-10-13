@@ -1,4 +1,6 @@
 export { settingsQuery, stateQuery } from './api/queries'
+export type { Credentials } from './api/session'
+export { closeSession, createSession } from './api/session'
 export { checkSettings } from './model/settings'
 export type { Session } from './model/store'
 export { useSession } from './model/store'

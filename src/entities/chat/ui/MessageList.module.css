@@ -18,7 +18,7 @@
   max-width: min(80%, 580px);
   min-width: 110px;
   padding: 12px 16px 8px;
-  border: 1px solid #e1e8df;
+  border: 1px solid #e8e9ef;
   border-radius: 3px 16px 16px;
   background: white;
   box-shadow: 0 2px 3px #27382c04;
@@ -26,9 +26,9 @@
 }
 .message[data-direction='outgoing'] {
   align-self: flex-end;
-  border-color: #d4e8d4;
+  border-color: #dce3ff;
   border-radius: 16px 3px 16px 16px;
-  background: #e2efdc;
+  background: #e2e9ff;
 }
 .message p {
   margin: 0;
@@ -52,7 +52,7 @@
   font-size: 13px;
 }
 .meta [data-status='read'] {
-  color: #197297;
+  color: #3c5edc;
 }
 .meta [data-status='failed'],
 .meta [data-status='noAccount'],

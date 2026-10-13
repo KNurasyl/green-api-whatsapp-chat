@@ -5,10 +5,10 @@ import { useSession } from '@/entities/session/model/store'
 afterEach(() => useSession.getState().close())
 
 it('cancels the old session before opening a new one', () => {
-  useSession.getState().open('first')
+  useSession.getState().open('first', 'test-key')
   const first = useSession.getState().session
 
-  useSession.getState().open('second')
+  useSession.getState().open('second', 'test-key')
 
   expect(first?.controller.signal.aborted).toBe(true)
   expect(useSession.getState().session?.id).toBe('second')
@@ -16,7 +16,7 @@ it('cancels the old session before opening a new one', () => {
 })
 
 it('clears the session and cancels requests on exit', () => {
-  useSession.getState().open('first')
+  useSession.getState().open('first', 'test-key')
   const session = useSession.getState().session
 
   useSession.getState().close()

@@ -1,12 +1,12 @@
-import { apiError, isRecord, request } from '@/shared/api'
+import { apiError, type ApiSession, isRecord, request } from '@/shared/api'
 
 import { type Notification, parseNotification } from './notification'
 
-export type QueueInput = { signal: AbortSignal }
+export type QueueInput = ApiSession
 
-export const receiveNotification = async ({ signal }: QueueInput): Promise<Notification | null> => {
+export const receiveNotification = async (session: QueueInput): Promise<Notification | null> => {
   const data = await request('receiveNotification', {
-    signal,
+    ...session,
 
     timeout: 40_000,
     allowEmpty: true,
@@ -17,10 +17,12 @@ export const receiveNotification = async ({ signal }: QueueInput): Promise<Notif
 
 export const deleteNotification = async ({
   signal,
+  key,
   receiptId,
 }: QueueInput & { receiptId: number }): Promise<void> => {
   const data = await request('deleteNotification', {
     signal,
+    key,
     method: 'DELETE',
     suffix: receiptId,
   })
