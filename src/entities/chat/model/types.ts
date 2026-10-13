@@ -11,7 +11,7 @@ export type Chat = {
   aliases: string[]
   phone?: string
   name?: string
-  messages: Message[]
+  messages: (Message & { order: number })[]
   draft: string
   statuses: Map<string, Delivery>
 }

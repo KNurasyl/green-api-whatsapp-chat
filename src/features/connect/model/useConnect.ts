@@ -1,6 +1,6 @@
 import { isCancelledError, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
-import { settingsQuery, stateQuery, useSession } from '@/entities/session'
+import { checkSettings, settingsQuery, stateQuery, useSession } from '@/entities/session'
 import {
   apiError,
   getErrorMessage,
@@ -39,13 +39,7 @@ export const useConnect = () => {
 
         if (attempt.current !== id) throw new DOMException('Aborted', 'AbortError')
 
-        if (settings.webhookUrl || !settings.incoming) {
-          throw apiError(
-            'validation',
-            'В кабинете включите входящие уведомления и очистите адрес отправки уведомлений (webhookUrl).',
-          )
-        }
-
+        checkSettings(settings)
         open(connection, id)
       } finally {
         if (attempt.current === id) attempt.current = null

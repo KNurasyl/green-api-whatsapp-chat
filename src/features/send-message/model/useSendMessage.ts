@@ -12,10 +12,7 @@ export const useSendMessage = (chat: Chat) => {
   const store = useChatStoreApi()
   const client = useQueryClient()
   const key = ['send', session?.id]
-  const pending = useMutationState({
-    filters: { mutationKey: key, status: 'pending' },
-    select: (mutation) => mutation.state.variables,
-  })
+  const attempts = useMutationState({ filters: { mutationKey: key } })
   const isForChat = (value: unknown) =>
     isRecord(value) &&
     (value.chatId === chat.id ||
@@ -24,11 +21,12 @@ export const useSendMessage = (chat: Chat) => {
     mutationKey: key,
     retry: false,
     networkMode: 'always',
-    gcTime: 0,
+    gcTime: Infinity,
     mutationFn: async (input: SendInput) => {
       if (!session) throw apiError('validation', 'Сначала подключите WhatsApp.')
 
       const timestamp = Date.now()
+      const order = store.getState().reserveOrder()
       const id = await sendMessage(
         session.connection,
         input.apiChatId,
@@ -43,20 +41,29 @@ export const useSendMessage = (chat: Chat) => {
 
       store
         .getState()
-        .confirmSend(target.id, { id, text: input.text, timestamp, direction: 'outgoing' })
+        .confirmSend(target.id, { id, text: input.text, timestamp, direction: 'outgoing' }, order)
     },
   })
 
   const send = () => {
-    const requests = client.getMutationCache().findAll({ mutationKey: key, status: 'pending' })
-    if (requests.some((request) => isForChat(request.state.variables))) return
+    const cache = client.getMutationCache()
+    const requests = cache.findAll({
+      mutationKey: key,
+      predicate: (request) => isForChat(request.state.variables),
+    })
+    if (requests.some((request) => request.state.status === 'pending')) return
+
+    for (const request of requests) cache.remove(request)
 
     mutation.mutate({ chatId: chat.id, apiChatId: chat.apiChatId, text: chat.draft })
   }
 
+  const requests = attempts.filter((attempt) => isForChat(attempt.variables))
+  const error = requests.find((request) => request.status === 'error')?.error
+
   return {
     send,
-    isSending: pending.some(isForChat),
-    error: mutation.error && isForChat(mutation.variables) ? getSendError(mutation.error) : null,
+    isSending: requests.some((request) => request.status === 'pending'),
+    error: error ? getSendError(error) : null,
   }
 }

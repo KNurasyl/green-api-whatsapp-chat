@@ -1,5 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 import { apiError, isRecord, request, type Connection } from '@/shared/api'
+import type { Settings } from '../model/settings'
 
 const defaults = {
   staleTime: 0,
@@ -29,13 +30,14 @@ export const settingsQuery = (connection: Connection, sessionId: string) =>
     ...defaults,
     queryKey: ['session', sessionId, 'settings'],
     networkMode: 'always',
-    queryFn: async ({ signal }) => {
+    queryFn: async ({ signal }): Promise<Settings> => {
       const data = await request(connection, 'getSettings', { signal })
 
       if (
         !isRecord(data) ||
         typeof data.webhookUrl !== 'string' ||
-        (data.incomingWebhook !== 'yes' && data.incomingWebhook !== 'no')
+        (data.incomingWebhook !== 'yes' && data.incomingWebhook !== 'no') ||
+        (data.stateWebhook !== 'yes' && data.stateWebhook !== 'no')
       ) {
         throw apiError('response', 'Не удалось прочитать настройки инстанса.')
       }
@@ -43,6 +45,7 @@ export const settingsQuery = (connection: Connection, sessionId: string) =>
       return {
         webhookUrl: data.webhookUrl,
         incoming: data.incomingWebhook === 'yes',
+        stateChanges: data.stateWebhook === 'yes',
         statuses:
           data.outgoingWebhook === 'yes' &&
           data.outgoingAPIMessageWebhook === 'yes' &&
