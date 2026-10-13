@@ -43,6 +43,9 @@ export const useReceiveMessages = () => {
           receive: () => receive(input),
           acknowledge: (receiptId) => acknowledge({ ...input, receiptId }),
           apply: (event) => {
+            if (event.type === 'status') {
+              store.getState().setMessageStatus(event.chatId, event.messageId, event.delivery)
+            }
             if (event.type === 'quota') {
               setNotice('Достигнут лимит тарифа. Проверьте ограничения в кабинете GREEN-API.')
             }

@@ -1,11 +1,13 @@
 import { useLayoutEffect, useRef } from 'react'
-import type { Message } from '../model/types'
+import type { Chat } from '../model/types'
+import { statusLabels } from '../model/status'
 import styles from './MessageList.module.css'
 
-type Props = { messages: Message[] }
+type Props = { chat: Chat }
 const time = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' })
 
-export const MessageList = ({ messages }: Props) => {
+export const MessageList = ({ chat }: Props) => {
+  const { messages, statuses } = chat
   const list = useRef<HTMLDivElement>(null)
   const followsLatest = useRef(true)
   const last = messages.at(-1)
@@ -34,17 +36,22 @@ export const MessageList = ({ messages }: Props) => {
         aria-live="polite"
         aria-relevant="additions"
       >
-        {messages.map((message) => (
-          <li key={message.id} className={styles.message} data-direction={message.direction}>
-            <p>{message.text}</p>
-            <div className={styles.meta}>
-              <time dateTime={new Date(message.timestamp).toISOString()}>
-                {time.format(message.timestamp)}
-              </time>
-              {message.direction === 'outgoing' && <span>Принято API</span>}
-            </div>
-          </li>
-        ))}
+        {messages.map((message) => {
+          const status = statuses.get(message.id)?.status
+          return (
+            <li key={message.id} className={styles.message} data-direction={message.direction}>
+              <p>{message.text}</p>
+              <div className={styles.meta}>
+                <time dateTime={new Date(message.timestamp).toISOString()}>
+                  {time.format(message.timestamp)}
+                </time>
+                {message.direction === 'outgoing' && (
+                  <span data-status={status}>{status ? statusLabels[status] : 'Принято API'}</span>
+                )}
+              </div>
+            </li>
+          )
+        })}
       </ol>
     </div>
   )

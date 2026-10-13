@@ -51,6 +51,15 @@
   text-align: center;
   font-size: 13px;
 }
+.meta [data-status='read'] {
+  color: #197297;
+}
+.meta [data-status='failed'],
+.meta [data-status='noAccount'],
+.meta [data-status='suspended'],
+.meta [data-status='yellowCard'] {
+  color: var(--color-error);
+}
 @media (max-width: 760px) {
   .scroll {
     padding: 16px 12px;

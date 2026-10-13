@@ -1,6 +1,7 @@
 import { createStore } from 'zustand/vanilla'
 import { findChat, mergeChat } from './chat'
 import type { Chat, ChatInput, Message } from './types'
+import { mergeDelivery, type Delivery } from './status'
 
 export type ChatState = {
   chats: Chat[]
@@ -10,12 +11,25 @@ export type ChatState = {
   setDraft: (id: string, text: string) => void
   addMessage: (id: string, message: Message) => void
   confirmSend: (id: string, message: Message) => void
+  setMessageStatus: (id: string, messageId: string, delivery: Delivery) => void
 }
 
 export const createChatStore = () =>
   createStore<ChatState>()((set, get) => ({
     chats: [],
     activeChatId: null,
+    setMessageStatus: (id, messageId, delivery) =>
+      set((state) => {
+        const chat = findChat(state.chats, id)
+        if (!chat) return state
+        const current = chat.statuses.get(messageId)
+        const next = mergeDelivery(current, delivery)
+        if (current === next) return state
+        const statuses = new Map(chat.statuses).set(messageId, next)
+        return {
+          chats: state.chats.map((item) => (item.id === chat.id ? { ...item, statuses } : item)),
+        }
+      }),
     confirmSend: (id, message) => {
       get().addMessage(id, message)
       const chat = findChat(get().chats, id)

@@ -13,6 +13,7 @@ export type Chat = {
   name?: string
   messages: Message[]
   draft: string
+  statuses: Map<string, Delivery>
 }
 
 export type ChatInput = {
@@ -21,3 +22,4 @@ export type ChatInput = {
   phone?: string
   name?: string
 }
+import type { Delivery } from './status'
