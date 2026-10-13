@@ -1,9 +1,8 @@
-import { apiError, type Connection, isRecord, request } from '@/shared/api'
+import { apiError, isRecord, request } from '@/shared/api'
 
 import { getMessageError } from '../lib/message'
 
 export const sendMessage = async (
-  connection: Connection,
   chatId: string,
   text: string,
   signal: AbortSignal,
@@ -12,7 +11,7 @@ export const sendMessage = async (
 
   if (error) throw apiError('validation', error)
 
-  const data = await request(connection, 'sendMessage', {
+  const data = await request('sendMessage', {
     method: 'POST',
     body: { chatId, message: text },
     signal,

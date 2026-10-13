@@ -3,27 +3,21 @@ import { afterEach, expect, it, vi } from 'vitest'
 
 import { settingsQuery, stateQuery } from '@/entities/session/api/queries'
 
-const connection = {
-  apiUrl: 'https://api.green-api.com',
-  idInstance: '123',
-  apiTokenInstance: 'test-token',
-}
-
 afterEach(() => vi.unstubAllGlobals())
 
 it('separates sessions without putting credentials in keys', () => {
-  const first = stateQuery(connection, 'first')
-  const second = stateQuery(connection, 'second')
+  const first = stateQuery('first')
+  const second = stateQuery('second')
 
   expect(first.queryKey).not.toEqual(second.queryKey)
-  expect(JSON.stringify(first.queryKey)).not.toContain(connection.apiTokenInstance)
+  expect(first.queryKey).toEqual(['session', 'first', 'state'])
 })
 
 it('rejects a state response without a state', async () => {
   vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(Response.json({ result: true })))
   const client = new QueryClient()
 
-  await expect(client.fetchQuery(stateQuery(connection, 'test'))).rejects.toMatchObject({
+  await expect(client.fetchQuery(stateQuery('test'))).rejects.toMatchObject({
     kind: 'response',
   })
   client.clear()
@@ -45,7 +39,7 @@ it('reads WhatsApp settings without requiring typeInstance', async () => {
   )
   const client = new QueryClient()
 
-  await expect(client.fetchQuery(settingsQuery(connection, 'test'))).resolves.toEqual({
+  await expect(client.fetchQuery(settingsQuery('test'))).resolves.toEqual({
     webhookUrl: '',
     incoming: true,
     stateChanges: true,
@@ -58,7 +52,7 @@ it('rejects incomplete settings', async () => {
   vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(Response.json({ webhookUrl: '' })))
   const client = new QueryClient()
 
-  await expect(client.fetchQuery(settingsQuery(connection, 'test'))).rejects.toMatchObject({
+  await expect(client.fetchQuery(settingsQuery('test'))).rejects.toMatchObject({
     kind: 'response',
   })
   client.clear()
@@ -75,7 +69,7 @@ it.each([undefined, 'unknown'])(
     )
     const client = new QueryClient()
 
-    await expect(client.fetchQuery(settingsQuery(connection, 'test'))).rejects.toMatchObject({
+    await expect(client.fetchQuery(settingsQuery('test'))).rejects.toMatchObject({
       kind: 'response',
     })
     client.clear()

@@ -36,7 +36,7 @@ export const useCreateChat = (onCreated: () => void): CreateChat => {
         return
       }
 
-      const apiChatId = await checkWhatsapp(session.connection, phone, session.controller.signal)
+      const apiChatId = await checkWhatsapp(phone, session.controller.signal)
 
       session.controller.signal.throwIfAborted()
       store.getState().openChat({ apiChatId, phone, aliases: [alias] })

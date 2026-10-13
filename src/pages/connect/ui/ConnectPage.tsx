@@ -36,7 +36,7 @@ export const ConnectPage = (): JSX.Element => (
       <div className={styles.card}>
         <div className={styles.cardTitle}>
           <h2>Подключение</h2>
-          <p>Введите реквизиты из кабинета GREEN-API</p>
+          <p>Откройте чат с настроенным аккаунтом WhatsApp</p>
         </div>
         <ConnectionForm />
         <a

@@ -3,12 +3,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { checkWhatsapp } from '@/features/create-chat/api/checkWhatsapp'
 import { normalizePhone } from '@/features/create-chat/lib/phone'
 
-const connection = {
-  apiUrl: 'https://api.green-api.com',
-  idInstance: '123',
-  apiTokenInstance: 'test-token',
-}
-
 afterEach(() => vi.unstubAllGlobals())
 
 describe('new chat', () => {
@@ -30,9 +24,9 @@ describe('new chat', () => {
 
     vi.stubGlobal('fetch', fetchMock)
 
-    await expect(
-      checkWhatsapp(connection, '79990000000', new AbortController().signal),
-    ).resolves.toBe('12345@lid')
+    await expect(checkWhatsapp('79990000000', new AbortController().signal)).resolves.toBe(
+      '12345@lid',
+    )
     expect(fetchMock).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
@@ -48,8 +42,6 @@ describe('new chat', () => {
     { existsWhatsapp: true, chatId: '123@g.us' },
   ])('rejects missing accounts or unusable chat addresses: %j', async (data) => {
     vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(Response.json(data)))
-    await expect(
-      checkWhatsapp(connection, '79990000000', new AbortController().signal),
-    ).rejects.toThrow()
+    await expect(checkWhatsapp('79990000000', new AbortController().signal)).rejects.toThrow()
   })
 })

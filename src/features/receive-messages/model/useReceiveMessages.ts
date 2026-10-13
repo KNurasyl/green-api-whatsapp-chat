@@ -51,7 +51,7 @@ export const useReceiveMessages = (): ReceiveMessages => {
 
     const controller = new AbortController()
     const signal = AbortSignal.any([controller.signal, session.controller.signal])
-    const input = { connection: session.connection, signal }
+    const input = { signal }
 
     const run = async (): Promise<void> => {
       if (signal.aborted) return
@@ -62,7 +62,7 @@ export const useReceiveMessages = (): ReceiveMessages => {
       try {
         if (attempt > 0) await checkConnection(client, session, signal)
 
-        const query = settingsQuery(session.connection, session.id)
+        const query = settingsQuery(session.id)
         const settings = client.getQueryData(query.queryKey)
 
         if (settings?.statuses === false) {

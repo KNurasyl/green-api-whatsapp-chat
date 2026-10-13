@@ -1,16 +1,13 @@
-import { apiError, type Connection, isRecord, request } from '@/shared/api'
+import { apiError, isRecord, request } from '@/shared/api'
 
 import { type Notification, parseNotification } from './notification'
 
-export type QueueInput = { connection: Connection; signal: AbortSignal }
+export type QueueInput = { signal: AbortSignal }
 
-export const receiveNotification = async ({
-  connection,
-  signal,
-}: QueueInput): Promise<Notification | null> => {
-  const data = await request(connection, 'receiveNotification', {
+export const receiveNotification = async ({ signal }: QueueInput): Promise<Notification | null> => {
+  const data = await request('receiveNotification', {
     signal,
-    query: { receiveTimeout: '30' },
+
     timeout: 40_000,
     allowEmpty: true,
   })
@@ -19,11 +16,10 @@ export const receiveNotification = async ({
 }
 
 export const deleteNotification = async ({
-  connection,
   signal,
   receiptId,
 }: QueueInput & { receiptId: number }): Promise<void> => {
-  const data = await request(connection, 'deleteNotification', {
+  const data = await request('deleteNotification', {
     signal,
     method: 'DELETE',
     suffix: receiptId,

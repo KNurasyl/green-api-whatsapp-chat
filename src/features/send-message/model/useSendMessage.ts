@@ -37,12 +37,7 @@ export const useSendMessage = (chat: Chat): SendMessage => {
 
       const timestamp = Date.now()
       const order = store.getState().reserveOrder()
-      const id = await sendMessage(
-        session.connection,
-        input.apiChatId,
-        input.text,
-        session.controller.signal,
-      )
+      const id = await sendMessage(input.apiChatId, input.text, session.controller.signal)
 
       session.controller.signal.throwIfAborted()
       const state = store.getState()

@@ -32,13 +32,7 @@ it('requires authorization events before opening a session', async () => {
 
   vi.stubGlobal('fetch', fetch)
   render(<ConnectionForm />, { wrapper: Wrapper })
-  fireEvent.change(screen.getByRole('textbox', { name: 'Адрес API' }), {
-    target: { value: 'https://api.green-api.com' },
-  })
-  fireEvent.change(screen.getByRole('textbox', { name: 'ID инстанса' }), {
-    target: { value: '123' },
-  })
-  fireEvent.change(screen.getByLabelText('Токен инстанса'), { target: { value: 'test-token' } })
+  expect(screen.queryByLabelText('Токен инстанса')).toBeNull()
   fireEvent.click(screen.getByRole('button', { name: 'Подключиться' }))
 
   expect((await screen.findByRole('alert')).textContent).toContain('stateWebhook')

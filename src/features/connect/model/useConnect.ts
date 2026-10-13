@@ -2,16 +2,10 @@ import { isCancelledError, useMutation, useQueryClient } from '@tanstack/react-q
 import { useEffect, useRef } from 'react'
 
 import { checkSettings, settingsQuery, stateQuery, useSession } from '@/entities/session'
-import {
-  apiError,
-  type Connection,
-  getErrorMessage,
-  isAborted,
-  parseConnection,
-} from '@/shared/api'
+import { apiError, getErrorMessage, isAborted } from '@/shared/api'
 
 type Connect = {
-  connect: (input: Connection) => void
+  connect: () => void
   cancel: () => void
   isPending: boolean
   error: string | null
@@ -26,14 +20,13 @@ export const useConnect = (): Connect => {
     retry: false,
     networkMode: 'always',
     gcTime: 0,
-    mutationFn: async (input: Connection): Promise<void> => {
-      const connection = parseConnection(input)
+    mutationFn: async (): Promise<void> => {
       const id = crypto.randomUUID()
 
       attempt.current = id
 
       try {
-        const state = await client.fetchQuery(stateQuery(connection, id))
+        const state = await client.fetchQuery(stateQuery(id))
 
         if (attempt.current !== id) throw new DOMException('Aborted', 'AbortError')
 
@@ -44,12 +37,12 @@ export const useConnect = (): Connect => {
           )
         }
 
-        const settings = await client.fetchQuery(settingsQuery(connection, id))
+        const settings = await client.fetchQuery(settingsQuery(id))
 
         if (attempt.current !== id) throw new DOMException('Aborted', 'AbortError')
 
         checkSettings(settings)
-        open(connection, id)
+        open(id)
       } finally {
         if (attempt.current === id) attempt.current = null
 
@@ -83,10 +76,10 @@ export const useConnect = (): Connect => {
   const message =
     error && !isAborted(error) && !isCancelledError(error) ? getErrorMessage(error) : null
 
-  const connect = (input: Connection): void => {
+  const connect = (): void => {
     if (client.isMutating({ mutationKey: ['connect'] })) return
 
-    mutation.mutate(input)
+    mutation.mutate()
   }
 
   return { connect, isPending: mutation.isPending, error: message, cancel }

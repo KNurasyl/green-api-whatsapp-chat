@@ -30,12 +30,7 @@ afterEach(() => {
 })
 
 it('keeps receiving paused until authorization events are enabled again', async () => {
-  useSession
-    .getState()
-    .open(
-      { apiUrl: 'https://api.green-api.com', idInstance: '123', apiTokenInstance: 'test-token' },
-      'test-session',
-    )
+  useSession.getState().open('test-session')
   vi.mocked(receiveNotification)
     .mockRejectedValueOnce(apiError('response', 'Получение приостановлено'))
     .mockImplementation(

@@ -80,9 +80,22 @@ export default defineConfig([
     },
   },
   {
-    files: ['*.config.{js,ts}'],
+    files: ['*.config.{js,ts}', 'server/**/*.ts'],
     languageOptions: {
       globals: globals.node,
+    },
+  },
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            { regex: '(^|/)server(/|$)', message: 'Server code must stay outside the browser.' },
+          ],
+        },
+      ],
     },
   },
   prettier,

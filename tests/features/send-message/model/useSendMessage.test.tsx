@@ -58,14 +58,7 @@ const submit = (text: string) => {
 }
 
 beforeEach(() => {
-  useSession.getState().open(
-    {
-      apiUrl: 'https://api.green-api.com',
-      idInstance: '123',
-      apiTokenInstance: 'test-token',
-    },
-    'test-session',
-  )
+  useSession.getState().open('test-session')
 })
 
 afterEach(() => {

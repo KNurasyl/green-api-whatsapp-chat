@@ -1,53 +1,30 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { parseConnection } from '@/shared/api/connection'
 import { request } from '@/shared/api/request'
-
-const connection = {
-  apiUrl: 'https://test.api.greenapi.com',
-  idInstance: '123',
-  apiTokenInstance: 'test-token',
-}
 
 afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllGlobals()
 })
 
-describe('connection', () => {
-  it('accepts the console address and trims fields', () => {
-    expect(
-      parseConnection({ ...connection, apiUrl: `${connection.apiUrl}/`, idInstance: ' 123 ' }),
-    ).toEqual(connection)
-  })
-
-  it.each([
-    'http://api.green-api.com',
-    'https://api.green-api.com.evil.example',
-    'https://fakeapi.green-api.com',
-    'https://user:secret@api.green-api.com',
-    'https://api.green-api.com/path',
-    'https://api.green-api.com?token=value',
-    'https://api.green-api.com:444',
-  ])('rejects an unsafe address: %s', (apiUrl) => {
-    expect(() => parseConnection({ ...connection, apiUrl })).toThrow()
-  })
-})
-
 describe('request', () => {
-  it('uses the supplied address and omits JSON headers on GET', async () => {
+  it('uses the local API without credentials or JSON headers on GET', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockResolvedValue(Response.json({ stateInstance: 'authorized' }))
 
     vi.stubGlobal('fetch', fetchMock)
 
-    await expect(request(connection, 'getStateInstance')).resolves.toEqual({
+    await expect(request('getStateInstance')).resolves.toEqual({
       stateInstance: 'authorized',
     })
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://test.api.greenapi.com/waInstance123/getStateInstance/test-token',
-      expect.objectContaining({ credentials: 'omit', headers: undefined, method: 'GET' }),
+      '/api/getStateInstance',
+      expect.objectContaining({
+        credentials: 'omit',
+        headers: { 'X-Chat-Client': 'web' },
+        method: 'GET',
+      }),
     )
   })
 
@@ -56,7 +33,7 @@ describe('request', () => {
       'fetch',
       vi.fn<typeof fetch>().mockResolvedValue(new Response('test-token', { status: 403 })),
     )
-    await expect(request(connection, 'getStateInstance')).rejects.toMatchObject({
+    await expect(request('getStateInstance')).rejects.toMatchObject({
       kind: 'http',
       status: 403,
       message: 'Доступ запрещён. Проверьте адрес API и реквизиты инстанса.',
@@ -70,7 +47,7 @@ describe('request', () => {
         .fn<typeof fetch>()
         .mockResolvedValue(new Response('', { status: 429, headers: { 'Retry-After': '3' } })),
     )
-    await expect(request(connection, 'getStateInstance')).rejects.toMatchObject({
+    await expect(request('getStateInstance')).rejects.toMatchObject({
       retryAfter: 3000,
     })
   })
@@ -80,7 +57,7 @@ describe('request', () => {
       'fetch',
       vi.fn<typeof fetch>().mockResolvedValue(new Response('<html>error</html>')),
     )
-    await expect(request(connection, 'getSettings')).rejects.toMatchObject({ kind: 'response' })
+    await expect(request('getSettings')).rejects.toMatchObject({ kind: 'response' })
   })
 
   it('does not make a request after cancellation', async () => {
@@ -90,9 +67,9 @@ describe('request', () => {
     vi.stubGlobal('fetch', fetchMock)
     controller.abort()
 
-    await expect(
-      request(connection, 'getSettings', { signal: controller.signal }),
-    ).rejects.toMatchObject({ name: 'AbortError' })
+    await expect(request('getSettings', { signal: controller.signal })).rejects.toMatchObject({
+      name: 'AbortError',
+    })
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
@@ -110,12 +87,27 @@ describe('request', () => {
     )
 
     vi.stubGlobal('fetch', fetchMock)
-    const result = expect(
-      request(connection, 'getStateInstance', { timeout: 1000 }),
-    ).rejects.toMatchObject({ kind: 'timeout' })
+    const result = expect(request('getStateInstance', { timeout: 1000 })).rejects.toMatchObject({
+      kind: 'timeout',
+    })
 
     await vi.advanceTimersByTimeAsync(1000)
     await result
     expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+})
+it('explains a missing server configuration without echoing response data', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        Response.json({ error: 'configuration', secret: 'test-token' }, { status: 503 }),
+      ),
+  )
+
+  await expect(request('getStateInstance')).rejects.toMatchObject({
+    kind: 'validation',
+    message: 'Настройте GREEN-API в серверном .env и перезапустите приложение.',
   })
 })

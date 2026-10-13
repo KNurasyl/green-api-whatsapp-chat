@@ -3,12 +3,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { sendMessage } from '@/features/send-message/api/sendMessage'
 import { getMessageError, getSendError } from '@/features/send-message/lib/message'
 
-const connection = {
-  apiUrl: 'https://api.green-api.com',
-  idInstance: '123',
-  apiTokenInstance: 'test-token',
-}
-
 afterEach(() => vi.unstubAllGlobals())
 
 describe('send message', () => {
@@ -25,7 +19,7 @@ describe('send message', () => {
 
     vi.stubGlobal('fetch', fetchMock)
     await expect(
-      sendMessage(connection, '12345@lid', ' Привет\nМир ', new AbortController().signal),
+      sendMessage('12345@lid', ' Привет\nМир ', new AbortController().signal),
     ).resolves.toBe('message-1')
     expect(fetchMock).toHaveBeenCalledWith(
       expect.any(String),
@@ -41,12 +35,9 @@ describe('send message', () => {
       .mockRejectedValue(new TypeError('Network error with test-token'))
 
     vi.stubGlobal('fetch', fetchMock)
-    const error = await sendMessage(
-      connection,
-      '12345@lid',
-      'Привет',
-      new AbortController().signal,
-    ).catch((value: unknown) => value)
+    const error = await sendMessage('12345@lid', 'Привет', new AbortController().signal).catch(
+      (value: unknown) => value,
+    )
 
     expect(getSendError(error)).toContain('Сообщение могло уйти')
     expect(getSendError(error)).not.toContain('test-token')
@@ -55,12 +46,9 @@ describe('send message', () => {
 
   it('treats a missing message id as an uncertain result', async () => {
     vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(Response.json({ result: true })))
-    const error = await sendMessage(
-      connection,
-      '12345@lid',
-      'Привет',
-      new AbortController().signal,
-    ).catch((value: unknown) => value)
+    const error = await sendMessage('12345@lid', 'Привет', new AbortController().signal).catch(
+      (value: unknown) => value,
+    )
 
     expect(getSendError(error)).toContain('Сообщение могло уйти')
   })
