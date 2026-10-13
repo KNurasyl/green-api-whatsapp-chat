@@ -7,12 +7,18 @@ import { Button } from '@/shared/ui/button'
 import styles from './ChatPage.module.css'
 
 type Props = { onSignOut: () => void }
+const connectionLabels = {
+  connecting: 'Проверяем подключение…',
+  connected: 'WhatsApp подключён',
+  reconnecting: 'Восстанавливаем связь…',
+  paused: 'Получение приостановлено',
+}
 
 export const ChatPage = ({ onSignOut }: Props) => {
   const [isCreating, setIsCreating] = useState(false)
   const chat = useChatStore((state) => state.chats.find((item) => item.id === state.activeChatId))
   const selectChat = useChatStore((state) => state.selectChat)
-  const { error, notice, resume } = useReceiveMessages()
+  const { error, notice, resume, status } = useReceiveMessages()
 
   return (
     <main className={styles.layout} data-chat-open={Boolean(chat)}>
@@ -34,23 +40,29 @@ export const ChatPage = ({ onSignOut }: Props) => {
             variant="ghost"
             onClick={() => setIsCreating((value) => !value)}
             aria-expanded={isCreating}
+            disabled={status !== 'connected'}
           >
             + Новый чат
           </Button>
         </div>
-        {isCreating && <NewChatForm onClose={() => setIsCreating(false)} />}
+        {isCreating && (
+          <NewChatForm onClose={() => setIsCreating(false)} disabled={status !== 'connected'} />
+        )}
         <div className={styles.chatList}>
           <ChatList />
         </div>
         <div className={styles.connection}>
-          <span data-paused={Boolean(error)} />{' '}
-          {error ? 'Получение приостановлено' : 'WhatsApp подключён'}
+          <span data-paused={status !== 'connected'} /> {connectionLabels[status]}
         </div>
       </aside>
       <section className={styles.conversation} aria-label="Разговор">
-        {(error || notice) && (
+        {(error || notice || status === 'reconnecting') && (
           <div className={styles.notice} role="status">
-            <p>{error || notice}</p>
+            <p>
+              {error ||
+                notice ||
+                'Связь прервалась. Подключаемся снова; сообщения и черновики сохранены.'}
+            </p>
             {error && (
               <Button variant="ghost" onClick={resume}>
                 Возобновить
@@ -75,7 +87,7 @@ export const ChatPage = ({ onSignOut }: Props) => {
               </div>
             </header>
             <MessageList key={chat.id} chat={chat} />
-            <MessageComposer chat={chat} disabled={Boolean(error)} />
+            <MessageComposer chat={chat} disabled={status !== 'connected'} />
           </>
         ) : (
           <div className={styles.empty}>
@@ -88,7 +100,9 @@ export const ChatPage = ({ onSignOut }: Props) => {
               <br />
               собеседника в списке слева.
             </p>
-            <Button onClick={() => setIsCreating(true)}>Начать разговор</Button>
+            <Button onClick={() => setIsCreating(true)} disabled={status !== 'connected'}>
+              Начать разговор
+            </Button>
           </div>
         )}
       </section>
