@@ -46,7 +46,7 @@ export const MessageList = ({ chat }: Props) => {
                   {time.format(message.timestamp)}
                 </time>
                 {message.direction === 'outgoing' && (
-                  <span data-status={status}>{status ? statusLabels[status] : 'Принято API'}</span>
+                  <span data-status={status}>{status ? statusLabels[status] : 'В очереди'}</span>
                 )}
               </div>
             </li>
