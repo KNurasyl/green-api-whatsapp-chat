@@ -1,0 +1,19 @@
+.form {
+  display: grid;
+  gap: 1.25rem;
+}
+.error {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.note {
+  margin: -0.25rem 0 0;
+  color: var(--color-muted);
+  text-align: center;
+  font-size: 0.75rem;
+}

@@ -1,9 +1,19 @@
+import { useQueryClient } from '@tanstack/react-query'
+import { ChatPage } from '@/pages/chat'
+import { ConnectPage } from '@/pages/connect'
+import { useSession } from '@/entities/session'
+
 export const App = () => {
-  return (
-    <main className="welcome">
-      <p className="welcome-label">GREEN-API</p>
-      <h1>WhatsApp Chat</h1>
-      <p className="welcome-text">Личные сообщения через GREEN-API.</p>
-    </main>
-  )
+  const session = useSession((state) => state.session)
+  const close = useSession((state) => state.close)
+  const client = useQueryClient()
+
+  const signOut = () => {
+    session?.controller.abort()
+    void client.cancelQueries()
+    client.clear()
+    close()
+  }
+
+  return session ? <ChatPage key={session.id} onSignOut={signOut} /> : <ConnectPage />
 }
