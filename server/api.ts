@@ -25,7 +25,7 @@ const checkClient = (request: IncomingMessage, env: Environment): void => {
   if (!allowed && local) allowed = `http://${host}`
 
   if (!allowed || request.headers['x-chat-client'] !== 'web' || (origin && origin !== allowed)) {
-    throw httpError(403, 'Р—Р°РїСЂРѕСЃ СЂР°Р·СЂРµС€С‘РЅ С‚РѕР»СЊРєРѕ РёР· РїСЂРёР»РѕР¶РµРЅРёСЏ.')
+    throw httpError(403, 'Запрос разрешён только из приложения.')
   }
 }
 
@@ -69,17 +69,16 @@ export const createApi = (env: Environment): ApiHandler => {
       if (request.url === '/api/session' && request.method === 'POST') {
         const data = await readJson(request)
 
-        if (!isRecord(data))
-          throw httpError(400, 'РЈРєР°Р¶РёС‚Рµ СЂРµРєРІРёР·РёС‚С‹ РїРѕРґРєР»СЋС‡РµРЅРёСЏ.')
+        if (!isRecord(data)) throw httpError(400, 'Укажите реквизиты подключения.')
 
         let config: GreenConfig
 
         try {
-          if (data.useEnv && (env.APP_ORIGIN || env.VERCEL)) throw new Error('РќРµРґРѕСЃС‚СѓРїРЅРѕ')
+          if (data.useEnv && (env.APP_ORIGIN || env.VERCEL)) throw new Error('Недоступно')
 
           config = data.useEnv === true ? readEnv(env) : readCredentials(data)
         } catch {
-          throw httpError(400, 'РџСЂРѕРІРµСЂСЊС‚Рµ СЂРµРєРІРёР·РёС‚С‹ РїРѕРґРєР»СЋС‡РµРЅРёСЏ.')
+          throw httpError(400, 'Проверьте реквизиты подключения.')
         }
 
         controller.signal.throwIfAborted()
@@ -92,8 +91,7 @@ export const createApi = (env: Environment): ApiHandler => {
       }
 
       if (request.url === '/api/session' && request.method === 'DELETE') {
-        if (session.key && session.key !== sessionKey)
-          throw httpError(401, 'Р”СЂСѓРіР°СЏ СЃРµСЃСЃРёСЏ.')
+        if (session.key && session.key !== sessionKey) throw httpError(401, 'Другая сессия.')
 
         session.destroy()
         sendJson(response, 200, { result: true })
@@ -104,7 +102,7 @@ export const createApi = (env: Environment): ApiHandler => {
       const route = readRoute(request.url, request.method)
 
       if (!session.config || !session.key || session.key !== sessionKey) {
-        throw httpError(401, 'РЎРµСЃСЃРёСЏ Р·Р°РІРµСЂС€РµРЅР°.')
+        throw httpError(401, 'Сессия завершена.')
       }
 
       const body =

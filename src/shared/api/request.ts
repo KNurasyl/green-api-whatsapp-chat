@@ -53,17 +53,6 @@ export const request = async (
     })
 
     if (!response.ok) {
-      if (response.status === 503) {
-        const data: unknown = await response.json().catch(() => null)
-
-        if (isRecord(data) && data.error === 'configuration') {
-          throw apiError(
-            'validation',
-            'Настройте GREEN-API в серверном .env и перезапустите приложение.',
-          )
-        }
-      }
-
       throw httpError(response.status, readRetryAfter(response.headers.get('Retry-After')))
     }
 

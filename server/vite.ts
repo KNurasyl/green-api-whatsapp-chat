@@ -3,7 +3,8 @@ import { type Connect, loadEnv, type Plugin } from 'vite'
 import { createApi } from './api.ts'
 
 export const greenApi = (mode: string): Plugin => {
-  const api = createApi(loadEnv(mode, process.cwd(), 'GREEN_API_'))
+  const env = loadEnv(mode, process.cwd(), ['GREEN_API_', 'SESSION_SECRET', 'APP_ORIGIN'])
+  const api = createApi(env)
 
   const middleware: Connect.NextHandleFunction = (request, response, next) => {
     void api(request, response).then((handled) => {
