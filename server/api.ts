@@ -1,10 +1,13 @@
+import { randomBytes } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
+
+import { getIronSession } from 'iron-session'
 
 import { type Environment, type GreenConfig, readCredentials, readEnv } from './env.ts'
 import { requestGreenApi } from './greenApi.ts'
 import { httpError, isHttpError, isRecord, readJson, sendJson } from './http.ts'
 import { readBody, readRoute } from './routes.ts'
-import { createSessions } from './sessions.ts'
+import { type SessionData, sessionOptions } from './sessions.ts'
 
 type ApiHandler = (request: IncomingMessage, response: ServerResponse) => Promise<boolean>
 
@@ -13,15 +16,21 @@ const checkClient = (request: IncomingMessage, env: Environment): void => {
   const origin = request.headers.origin
 
   const local = /^(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/.test(host)
-  const allowed = env.APP_ORIGIN || (local ? `http://${host}` : '')
+  const hosts = [env.VERCEL_URL, env.VERCEL_PROJECT_PRODUCTION_URL].filter(Boolean)
+  const deployed = env.VERCEL && hosts.includes(host)
+  let allowed = env.APP_ORIGIN ?? ''
+
+  if (!allowed && deployed) allowed = `https://${host}`
+
+  if (!allowed && local) allowed = `http://${host}`
 
   if (!allowed || request.headers['x-chat-client'] !== 'web' || (origin && origin !== allowed)) {
-    throw httpError(403, 'Запрос разрешён только из приложения.')
+    throw httpError(403, 'Р—Р°РїСЂРѕСЃ СЂР°Р·СЂРµС€С‘РЅ С‚РѕР»СЊРєРѕ РёР· РїСЂРёР»РѕР¶РµРЅРёСЏ.')
   }
 }
 
 export const createApi = (env: Environment): ApiHandler => {
-  const sessions = createSessions()
+  const options = sessionOptions(env)
 
   return async (request, response) => {
     if (!request.url?.startsWith('/api/')) return false
@@ -30,6 +39,7 @@ export const createApi = (env: Environment): ApiHandler => {
     const cancel = (): void => controller.abort()
 
     response.on('close', cancel)
+    request.on('error', cancel)
 
     try {
       checkClient(request, env)
@@ -40,7 +50,7 @@ export const createApi = (env: Environment): ApiHandler => {
       if (request.url === '/api/config' && request.method === 'GET') {
         let configured = false
 
-        if (!env.APP_ORIGIN) {
+        if (!env.APP_ORIGIN && !env.VERCEL) {
           try {
             readEnv(env)
             configured = true
@@ -54,36 +64,48 @@ export const createApi = (env: Environment): ApiHandler => {
         return true
       }
 
+      const session = await getIronSession<SessionData>(request, response, options)
+
       if (request.url === '/api/session' && request.method === 'POST') {
         const data = await readJson(request)
 
-        if (!isRecord(data)) throw httpError(400, 'Укажите реквизиты подключения.')
+        if (!isRecord(data))
+          throw httpError(400, 'РЈРєР°Р¶РёС‚Рµ СЂРµРєРІРёР·РёС‚С‹ РїРѕРґРєР»СЋС‡РµРЅРёСЏ.')
 
         let config: GreenConfig
 
         try {
-          if (data.useEnv && env.APP_ORIGIN) throw new Error('Недоступно')
+          if (data.useEnv && (env.APP_ORIGIN || env.VERCEL)) throw new Error('РќРµРґРѕСЃС‚СѓРїРЅРѕ')
 
           config = data.useEnv === true ? readEnv(env) : readCredentials(data)
         } catch {
-          throw httpError(400, 'Проверьте реквизиты подключения.')
+          throw httpError(400, 'РџСЂРѕРІРµСЂСЊС‚Рµ СЂРµРєРІРёР·РёС‚С‹ РїРѕРґРєР»СЋС‡РµРЅРёСЏ.')
         }
 
         controller.signal.throwIfAborted()
-        sendJson(response, 201, { key: sessions.create(config) })
+        session.key = randomBytes(32).toString('base64url')
+        session.config = config
+        await session.save()
+        sendJson(response, 201, { key: session.key })
 
         return true
       }
 
       if (request.url === '/api/session' && request.method === 'DELETE') {
-        sessions.remove(sessionKey)
+        if (session.key && session.key !== sessionKey)
+          throw httpError(401, 'Р”СЂСѓРіР°СЏ СЃРµСЃСЃРёСЏ.')
+
+        session.destroy()
         sendJson(response, 200, { result: true })
 
         return true
       }
 
       const route = readRoute(request.url, request.method)
-      const session = sessions.get(sessionKey)
+
+      if (!session.config || !session.key || session.key !== sessionKey) {
+        throw httpError(401, 'РЎРµСЃСЃРёСЏ Р·Р°РІРµСЂС€РµРЅР°.')
+      }
 
       const body =
         route.method === 'POST' ? readBody(route.name, await readJson(request)) : undefined
@@ -94,7 +116,7 @@ export const createApi = (env: Environment): ApiHandler => {
         config: session.config,
         route,
         body,
-        signal: AbortSignal.any([controller.signal, session.controller.signal]),
+        signal: controller.signal,
       })
 
       if (result.retryAfter) response.setHeader('Retry-After', result.retryAfter)
@@ -108,6 +130,7 @@ export const createApi = (env: Environment): ApiHandler => {
       }
     } finally {
       response.off('close', cancel)
+      request.off('error', cancel)
     }
 
     return true

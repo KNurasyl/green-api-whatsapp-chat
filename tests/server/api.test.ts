@@ -21,9 +21,17 @@ const withServer = async (
   run: (origin: string) => Promise<void>,
   environment: Environment = env,
 ): Promise<void> => {
-  const api = createApi(environment)
+  const first = createApi({
+    SESSION_SECRET: 'a-secure-test-password-with-more-than-32-characters',
+    ...environment,
+  })
+  const second = createApi({
+    SESSION_SECRET: 'a-secure-test-password-with-more-than-32-characters',
+    ...environment,
+  })
+  let calls = 0
   const server = createServer((request, response) => {
-    void api(request, response).then((handled) => {
+    void (calls++ % 2 ? first : second)(request, response).then((handled) => {
       if (!handled) sendJson(response, 404, null)
     })
   })
@@ -38,6 +46,7 @@ const withServer = async (
     const origin = `http://127.0.0.1:${address.port}`
 
     delete headers['X-Chat-Session']
+    delete headers.Cookie
     if (environment.GREEN_API_TOKEN) {
       const response = await browserFetch(origin + '/api/session', {
         method: 'POST',
@@ -49,6 +58,7 @@ const withServer = async (
       if (!isRecord(data) || typeof data.key !== 'string') throw new Error('Missing session key')
 
       headers['X-Chat-Session'] = data.key
+      headers.Cookie = response.headers.getSetCookie()[0]?.split(';')[0] ?? ''
     }
 
     await run(origin)
@@ -384,7 +394,7 @@ it('rejects malformed successful responses without leaking their content', async
   })
 })
 
-it('accepts form credentials without a server preset and invalidates the key on logout', async () => {
+it('accepts form credentials across server instances and deletes the cookie on logout', async () => {
   upstream.mockResolvedValue(Response.json({ stateInstance: 'authorized' }))
 
   await withServer(async (origin) => {
@@ -401,7 +411,11 @@ it('accepts form credentials without a server preset and invalidates the key on 
 
     if (!isRecord(data) || typeof data.key !== 'string') throw new Error('Missing session key')
 
-    const sessionHeaders = { ...headers, 'X-Chat-Session': data.key }
+    const sessionHeaders = {
+      ...headers,
+      'X-Chat-Session': data.key,
+      Cookie: login.headers.getSetCookie()[0]?.split(';')[0] ?? '',
+    }
     const state = await browserFetch(origin + '/api/getStateInstance', { headers: sessionHeaders })
 
     expect(state.status).toBe(200)
@@ -411,7 +425,13 @@ it('accepts form credentials without a server preset and invalidates the key on 
       expect.anything(),
     )
 
-    await browserFetch(origin + '/api/session', { method: 'DELETE', headers: sessionHeaders })
+    const logout = await browserFetch(origin + '/api/session', {
+      method: 'DELETE',
+      headers: sessionHeaders,
+    })
+
+    expect(logout.headers.getSetCookie()[0]).toContain('Max-Age=0')
+    sessionHeaders.Cookie = logout.headers.getSetCookie()[0]?.split(';')[0] ?? ''
     const afterLogout = await browserFetch(origin + '/api/getStateInstance', {
       headers: sessionHeaders,
     })
@@ -436,4 +456,26 @@ it('rejects credentials pointing outside GREEN-API without making a request', as
     expect(await response.text()).not.toContain('secret')
     expect(upstream).not.toHaveBeenCalled()
   }, {})
+})
+
+it('requires both the encrypted cookie and its session key', async () => {
+  await withServer(async (origin) => {
+    const withoutCookie = await browserFetch(origin + '/api/getStateInstance', {
+      headers: { 'X-Chat-Client': 'web', 'X-Chat-Session': headers['X-Chat-Session'] ?? '' },
+    })
+    const wrongKey = await browserFetch(origin + '/api/getStateInstance', {
+      headers: { ...headers, 'X-Chat-Session': 'another-session' },
+    })
+    const cookie = headers.Cookie ?? ''
+    const middle = Math.floor(cookie.length / 2)
+    const changed =
+      cookie.slice(0, middle) + (cookie[middle] === 'a' ? 'b' : 'a') + cookie.slice(middle + 1)
+    const tampered = await browserFetch(origin + '/api/getStateInstance', {
+      headers: { ...headers, Cookie: changed },
+    })
+
+    expect([withoutCookie.status, wrongKey.status, tampered.status]).toEqual([401, 401, 401])
+    expect(upstream).not.toHaveBeenCalled()
+    expect(headers.Cookie).not.toContain(env.GREEN_API_TOKEN)
+  })
 })

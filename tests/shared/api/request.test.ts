@@ -21,7 +21,7 @@ describe('request', () => {
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/getStateInstance',
       expect.objectContaining({
-        credentials: 'omit',
+        credentials: 'same-origin',
         headers: { 'X-Chat-Client': 'web' },
         method: 'GET',
       }),

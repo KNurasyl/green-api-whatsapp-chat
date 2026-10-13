@@ -46,7 +46,7 @@ export const request = async (
         ...(options.body ? { 'Content-Type': 'application/json' } : {}),
       },
       body: options.body ? JSON.stringify(options.body) : undefined,
-      credentials: 'omit',
+      credentials: 'same-origin',
       redirect: 'error',
       cache: 'no-store',
       signal,

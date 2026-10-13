@@ -46,7 +46,7 @@ export const readCredentials = (data: unknown): GreenConfig => {
     throw new Error('Укажите HTTPS-адрес GREEN-API из кабинета без пути и параметров.')
   }
 
-  if (!/^\d+$/.test(idInstance) || !/^[a-zA-Z0-9_-]+$/.test(apiTokenInstance)) {
+  if (!/^\d{1,32}$/.test(idInstance) || !/^[a-zA-Z0-9_-]{1,256}$/.test(apiTokenInstance)) {
     throw new Error('Проверьте ID и токен инстанса.')
   }
 

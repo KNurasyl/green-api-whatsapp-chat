@@ -89,9 +89,7 @@ export const ConnectionForm = (): JSX.Element => {
         </Button>
       )}
 
-      <p className={styles.note}>
-        Токен хранится в памяти сервера до выхода или завершения сессии.
-      </p>
+      <p className={styles.note}>Подключение действует один час. При выходе сессия удаляется.</p>
     </form>
   )
 }

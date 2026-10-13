@@ -1,41 +1,29 @@
-import { afterEach, expect, it, vi } from 'vitest'
+import { expect, it } from 'vitest'
 
-import { createSessions } from '../../server/sessions.ts'
+import { sessionOptions } from '../../server/sessions.ts'
 
-const config = {
-  apiUrl: 'https://test.api.greenapi.com',
-  idInstance: '123',
-  apiTokenInstance: 'secret',
-}
+it('requires a stable secret in Vercel and sets secure cookie boundaries', () => {
+  expect(() => sessionOptions({ VERCEL: '1' })).toThrow('SESSION_SECRET')
+  expect(() => sessionOptions({ SESSION_SECRET: 'short' })).toThrow('SESSION_SECRET')
 
-afterEach(() => vi.useRealTimers())
+  const options = sessionOptions({
+    VERCEL: '1',
+    SESSION_SECRET: 'a-secure-test-password-with-more-than-32-characters',
+  })
 
-it('isolates credentials and cancels requests when a session closes', () => {
-  const sessions = createSessions()
-  const first = sessions.create(config)
-  const second = sessions.create({ ...config, apiTokenInstance: 'another-secret' })
-  const signal = sessions.get(first).controller.signal
-
-  sessions.remove(first)
-
-  expect(signal.aborted).toBe(true)
-  expect(() => sessions.get(first)).toThrow()
-  expect(sessions.get(second).config.apiTokenInstance).toBe('another-secret')
-  sessions.remove(second)
+  expect(options.cookieOptions).toEqual({
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+    path: '/api',
+  })
+  expect(options.ttl).toBe(3600)
 })
 
-it('expires inactive credentials and extends a session only while it is used', async () => {
-  vi.useFakeTimers()
+it('uses a temporary secret only for local development', () => {
+  const first = sessionOptions({})
+  const second = sessionOptions({})
 
-  const sessions = createSessions(1000)
-  const key = sessions.create(config)
-
-  await vi.advanceTimersByTimeAsync(900)
-  const signal = sessions.get(key).controller.signal
-
-  await vi.advanceTimersByTimeAsync(900)
-  expect(signal.aborted).toBe(false)
-  await vi.advanceTimersByTimeAsync(100)
-  expect(signal.aborted).toBe(true)
-  expect(() => sessions.get(key)).toThrow()
+  expect(first.password).not.toBe(second.password)
+  expect(first.cookieOptions?.secure).toBe(false)
 })

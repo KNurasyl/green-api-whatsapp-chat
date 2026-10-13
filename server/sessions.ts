@@ -1,48 +1,27 @@
 import { randomBytes } from 'node:crypto'
 
-import type { GreenConfig } from './env.ts'
-import { httpError } from './http.ts'
+import type { SessionOptions } from 'iron-session'
 
-type Session = {
-  config: GreenConfig
-  controller: AbortController
-  timer: ReturnType<typeof setTimeout>
-}
+import type { Environment, GreenConfig } from './env.ts'
 
-export const createSessions = (lifetime = 30 * 60_000) => {
-  const sessions = new Map<string, Session>()
+export type SessionData = { key: string; config: GreenConfig }
 
-  const remove = (key: string): void => {
-    const session = sessions.get(key)
+export const sessionOptions = (env: Environment): SessionOptions => {
+  const password = env.SESSION_SECRET || randomBytes(32).toString('hex')
 
-    if (!session) return
-
-    clearTimeout(session.timer)
-    session.controller.abort()
-    sessions.delete(key)
+  if ((env.VERCEL && !env.SESSION_SECRET) || password.length < 32) {
+    throw new Error('Задайте SESSION_SECRET длиной не менее 32 символов.')
   }
 
-  const create = (config: GreenConfig): string => {
-    if (sessions.size >= 100) throw httpError(503, 'Слишком много подключений.')
-
-    const key = randomBytes(32).toString('base64url')
-    const timer = setTimeout(() => remove(key), lifetime)
-
-    timer.unref()
-    sessions.set(key, { config, controller: new AbortController(), timer })
-
-    return key
+  return {
+    password,
+    cookieName: 'green-chat',
+    ttl: 3600,
+    cookieOptions: {
+      httpOnly: true,
+      secure: Boolean(env.VERCEL || env.APP_ORIGIN?.startsWith('https://')),
+      sameSite: 'strict',
+      path: '/api',
+    },
   }
-
-  const get = (key: string): Session => {
-    const session = sessions.get(key)
-
-    if (!session) throw httpError(401, 'Сессия завершена. Подключитесь снова.')
-
-    session.timer.refresh()
-
-    return session
-  }
-
-  return { create, get, remove }
 }

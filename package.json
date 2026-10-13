@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "5.104.2",
+    "iron-session": "9.0.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "zustand": "5.0.15"
