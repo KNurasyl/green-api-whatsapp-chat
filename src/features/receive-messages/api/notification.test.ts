@@ -10,6 +10,27 @@ const body = {
 }
 
 describe('notifications', () => {
+  it('reads delivery events without trusting the raw error description', () => {
+    expect(
+      parseNotification({
+        receiptId: 1,
+        body: {
+          typeWebhook: 'outgoingMessageStatus',
+          chatId: '79990000000@c.us',
+          idMessage: 'message-1',
+          timestamp: 1700000000,
+          status: 'failed',
+          description: 'Sensitive URL and token',
+        },
+      })?.event,
+    ).toEqual({
+      type: 'status',
+      chatId: '79990000000@c.us',
+      messageId: 'message-1',
+      delivery: { status: 'failed', timestamp: 1700000000000 },
+    })
+  })
+
   it('reads a personal text message and converts seconds to milliseconds', () => {
     expect(parseNotification({ receiptId: 123, body })).toEqual({
       receiptId: 123,

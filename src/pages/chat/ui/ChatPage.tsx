@@ -74,7 +74,7 @@ export const ChatPage = ({ onSignOut }: Props) => {
                 <p>Личный чат · WhatsApp</p>
               </div>
             </header>
-            <MessageList key={chat.id} messages={chat.messages} />
+            <MessageList key={chat.id} chat={chat} />
             <MessageComposer chat={chat} disabled={Boolean(error)} />
           </>
         ) : (
