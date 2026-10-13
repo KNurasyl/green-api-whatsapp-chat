@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NewChatForm } from '@/features/create-chat'
 import { MessageComposer } from '@/features/send-message'
+import { useReceiveMessages } from '@/features/receive-messages'
 import { ChatList, MessageList, getChatName, useChatStore } from '@/entities/chat'
 import { Button } from '@/shared/ui/button'
 import styles from './ChatPage.module.css'
@@ -11,6 +12,7 @@ export const ChatPage = ({ onSignOut }: Props) => {
   const [isCreating, setIsCreating] = useState(false)
   const chat = useChatStore((state) => state.chats.find((item) => item.id === state.activeChatId))
   const selectChat = useChatStore((state) => state.selectChat)
+  const { error, notice, resume } = useReceiveMessages()
 
   return (
     <main className={styles.layout} data-chat-open={Boolean(chat)}>
@@ -41,10 +43,21 @@ export const ChatPage = ({ onSignOut }: Props) => {
           <ChatList />
         </div>
         <div className={styles.connection}>
-          <span /> WhatsApp подключён
+          <span data-paused={Boolean(error)} />{' '}
+          {error ? 'Получение приостановлено' : 'WhatsApp подключён'}
         </div>
       </aside>
       <section className={styles.conversation} aria-label="Разговор">
+        {(error || notice) && (
+          <div className={styles.notice} role="status">
+            <p>{error || notice}</p>
+            {error && (
+              <Button variant="ghost" onClick={resume}>
+                Возобновить
+              </Button>
+            )}
+          </div>
+        )}
         {chat ? (
           <>
             <header className={styles.chatHeader}>
@@ -62,7 +75,7 @@ export const ChatPage = ({ onSignOut }: Props) => {
               </div>
             </header>
             <MessageList key={chat.id} messages={chat.messages} />
-            <MessageComposer chat={chat} />
+            <MessageComposer chat={chat} disabled={Boolean(error)} />
           </>
         ) : (
           <div className={styles.empty}>
