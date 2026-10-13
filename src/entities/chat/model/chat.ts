@@ -32,12 +32,14 @@ export const mergeChat = (chats: Chat[], input: ChatInput, activeId: string | nu
   }
 
   const ordered = [primary, ...matches.filter((chat) => chat.id !== primary.id)]
-  const messages = new Map(
-    ordered.flatMap((chat) => chat.messages.map((message) => [message.id, message] as const)),
-  )
+  const messages = new Map<string, Chat['messages'][number]>()
   const drafts = [...new Set(ordered.map((chat) => chat.draft).filter(Boolean))]
   const statuses = new Map<string, Delivery>()
   for (const chat of ordered) {
+    for (const message of chat.messages) {
+      const previous = messages.get(message.id)
+      if (!previous || message.order < previous.order) messages.set(message.id, message)
+    }
     for (const [id, delivery] of chat.statuses) {
       statuses.set(id, mergeDelivery(statuses.get(id), delivery))
     }
@@ -48,7 +50,7 @@ export const mergeChat = (chats: Chat[], input: ChatInput, activeId: string | nu
     aliases: [...new Set([...aliases, ...ordered.flatMap((chat) => chat.aliases)])],
     phone: input.phone ?? ordered.find((chat) => chat.phone)?.phone,
     name: input.name || ordered.find((chat) => chat.name)?.name,
-    messages: [...messages.values()].sort((first, second) => first.timestamp - second.timestamp),
+    messages: [...messages.values()].sort((first, second) => first.order - second.order),
     draft: drafts.join('\n'),
     statuses,
   }

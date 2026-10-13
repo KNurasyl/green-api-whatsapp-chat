@@ -26,6 +26,7 @@ export const useSendMessage = (chat: Chat) => {
       if (!session) throw apiError('validation', 'Сначала подключите WhatsApp.')
 
       const timestamp = Date.now()
+      const order = store.getState().reserveOrder()
       const id = await sendMessage(
         session.connection,
         input.apiChatId,
@@ -40,7 +41,7 @@ export const useSendMessage = (chat: Chat) => {
 
       store
         .getState()
-        .confirmSend(target.id, { id, text: input.text, timestamp, direction: 'outgoing' })
+        .confirmSend(target.id, { id, text: input.text, timestamp, direction: 'outgoing' }, order)
     },
   })
 

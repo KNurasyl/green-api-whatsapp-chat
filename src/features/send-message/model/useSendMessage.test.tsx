@@ -2,7 +2,7 @@ import { useEffect, type PropsWithChildren } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
-import { ChatProvider, findChat, useChatStore, useChatStoreApi } from '@/entities/chat'
+import { ChatProvider, MessageList, findChat, useChatStore, useChatStoreApi } from '@/entities/chat'
 import { useSession } from '@/entities/session'
 import { apiError } from '@/shared/api'
 import { sendMessage } from '../api/sendMessage'
@@ -29,7 +29,26 @@ const Conversation = ({ chatId }: { chatId: string | null }) => {
     store.getState().openChat({ apiChatId: secondChat })
   }, [store])
 
-  return chat ? <MessageComposer chat={chat} /> : null
+  if (!chat) return null
+
+  return (
+    <>
+      <button
+        onClick={() =>
+          store.getState().addMessage(chat.id, {
+            id: 'reply',
+            text: 'Ответ',
+            direction: 'incoming',
+            timestamp: Math.floor(Date.now() / 1000) * 1000,
+          })
+        }
+      >
+        Получить ответ
+      </button>
+      <MessageList chat={chat} />
+      <MessageComposer chat={chat} />
+    </>
+  )
 }
 
 const submit = (text: string) => {
@@ -108,4 +127,26 @@ it('replaces the previous attempt only when the user sends again', async () => {
   expect(client.getMutationCache().findAll({ mutationKey: ['send', 'test-session'] })).toHaveLength(
     2,
   )
+})
+
+it('places a sent message before a reply that arrived before its HTTP response', async () => {
+  let resolveSend: (id: string) => void = () => {}
+  vi.mocked(sendMessage).mockReturnValue(
+    new Promise<string>((resolve) => {
+      resolveSend = resolve
+    }),
+  )
+  render(<Conversation chatId={firstChat} />, { wrapper: Wrapper })
+  submit('Вопрос')
+  await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1))
+  fireEvent.click(screen.getByRole('button', { name: 'Получить ответ' }))
+  await screen.findByText('Ответ')
+
+  await act(() => {
+    resolveSend('question')
+    return Promise.resolve()
+  })
+
+  const messages = screen.getByRole('list', { name: 'Сообщения' }).querySelectorAll('li > p')
+  expect(Array.from(messages, (item) => item.textContent)).toEqual(['Вопрос', 'Ответ'])
 })
