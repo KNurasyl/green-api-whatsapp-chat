@@ -6,18 +6,27 @@ type Props = ComponentProps<'input'> & {
   hint?: string
 }
 
-export const Input = ({ label, hint, ...props }: Props) => {
-  const id = useId()
+export const Input = ({ label, hint, id: suppliedId, ...props }: Props) => {
+  const generatedId = useId()
+  const id = suppliedId ?? generatedId
+  const hintId = `${id}-hint`
 
   return (
-    <label className={styles.field}>
-      <span className={styles.label}>{label}</span>
-      <input {...props} className={styles.input} aria-describedby={hint ? id : undefined} />
+    <div className={styles.field}>
+      <label className={styles.label} htmlFor={id}>
+        {label}
+      </label>
+      <input
+        {...props}
+        id={id}
+        className={styles.input}
+        aria-describedby={hint ? hintId : undefined}
+      />
       {hint && (
-        <span className={styles.hint} id={id}>
+        <span className={styles.hint} id={hintId}>
           {hint}
         </span>
       )}
-    </label>
+    </div>
   )
 }

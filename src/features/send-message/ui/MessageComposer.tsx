@@ -1,4 +1,11 @@
-import { useId, type FormEvent, type KeyboardEvent } from 'react'
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  type FormEvent,
+  type KeyboardEvent,
+} from 'react'
 import { useChatStore, type Chat } from '@/entities/chat'
 import { Button } from '@/shared/ui/button'
 import { useSendMessage } from '../model/useSendMessage'
@@ -10,6 +17,18 @@ export const MessageComposer = ({ chat, disabled = false }: Props) => {
   const setDraft = useChatStore((state) => state.setDraft)
   const { send, isSending, error } = useSendMessage(chat)
   const hintId = useId()
+  const input = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    input.current?.focus()
+  }, [chat.id])
+
+  useLayoutEffect(() => {
+    const element = input.current
+    if (!element) return
+    element.style.height = 'auto'
+    element.style.height = `${Math.min(element.scrollHeight, 160)}px`
+  }, [chat.draft])
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -34,6 +53,7 @@ export const MessageComposer = ({ chat, disabled = false }: Props) => {
       <div className={styles.row}>
         <textarea
           className={styles.input}
+          ref={input}
           aria-label="Сообщение"
           aria-describedby={hintId}
           placeholder="Напишите сообщение…"

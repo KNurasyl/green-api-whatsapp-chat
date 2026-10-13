@@ -23,6 +23,7 @@ export const NewChatForm = ({ onClose, disabled = false }: Props) => {
         placeholder="+7 000 000 00 00"
         type="tel"
         autoComplete="off"
+        autoFocus
         value={phone}
         required
         disabled={isPending}

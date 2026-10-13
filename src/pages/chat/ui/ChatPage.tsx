@@ -19,9 +19,29 @@ export const ChatPage = ({ onSignOut }: Props) => {
   const chat = useChatStore((state) => state.chats.find((item) => item.id === state.activeChatId))
   const selectChat = useChatStore((state) => state.selectChat)
   const { error, notice, resume, status } = useReceiveMessages()
+  const noticeText =
+    error ||
+    notice ||
+    (status === 'reconnecting'
+      ? 'Связь прервалась. Подключаемся снова; сообщения и черновики сохранены.'
+      : null)
 
   return (
-    <main className={styles.layout} data-chat-open={Boolean(chat)}>
+    <main
+      className={styles.layout}
+      data-chat-open={Boolean(chat)}
+      data-has-notice={Boolean(noticeText)}
+    >
+      {noticeText && (
+        <div className={styles.notice} role="status">
+          <p>{noticeText}</p>
+          {error && (
+            <Button variant="ghost" onClick={resume}>
+              Возобновить
+            </Button>
+          )}
+        </div>
+      )}
       <aside className={styles.sidebar}>
         <header className={styles.sidebarHeader}>
           <div className={styles.brand}>
@@ -56,20 +76,6 @@ export const ChatPage = ({ onSignOut }: Props) => {
         </div>
       </aside>
       <section className={styles.conversation} aria-label="Разговор">
-        {(error || notice || status === 'reconnecting') && (
-          <div className={styles.notice} role="status">
-            <p>
-              {error ||
-                notice ||
-                'Связь прервалась. Подключаемся снова; сообщения и черновики сохранены.'}
-            </p>
-            {error && (
-              <Button variant="ghost" onClick={resume}>
-                Возобновить
-              </Button>
-            )}
-          </div>
-        )}
         {chat ? (
           <>
             <header className={styles.chatHeader}>
