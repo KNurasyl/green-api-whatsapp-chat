@@ -1,15 +1,17 @@
 import { isCancelledError, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
-import { checkSettings, settingsQuery, stateQuery, useSession } from '@/entities/session'
-import {
-  apiError,
-  getErrorMessage,
-  isAborted,
-  parseConnection,
-  type Connection,
-} from '@/shared/api'
 
-export const useConnect = () => {
+import { checkSettings, settingsQuery, stateQuery, useSession } from '@/entities/session'
+import { apiError, getErrorMessage, isAborted } from '@/shared/api'
+
+type Connect = {
+  connect: () => void
+  cancel: () => void
+  isPending: boolean
+  error: string | null
+}
+
+export const useConnect = (): Connect => {
   const client = useQueryClient()
   const attempt = useRef<string | null>(null)
   const open = useSession((state) => state.open)
@@ -18,13 +20,13 @@ export const useConnect = () => {
     retry: false,
     networkMode: 'always',
     gcTime: 0,
-    mutationFn: async (input: Connection) => {
-      const connection = parseConnection(input)
+    mutationFn: async (): Promise<void> => {
       const id = crypto.randomUUID()
+
       attempt.current = id
 
       try {
-        const state = await client.fetchQuery(stateQuery(connection, id))
+        const state = await client.fetchQuery(stateQuery(id))
 
         if (attempt.current !== id) throw new DOMException('Aborted', 'AbortError')
 
@@ -35,14 +37,15 @@ export const useConnect = () => {
           )
         }
 
-        const settings = await client.fetchQuery(settingsQuery(connection, id))
+        const settings = await client.fetchQuery(settingsQuery(id))
 
         if (attempt.current !== id) throw new DOMException('Aborted', 'AbortError')
 
         checkSettings(settings)
-        open(connection, id)
+        open(id)
       } finally {
         if (attempt.current === id) attempt.current = null
+
         if (useSession.getState().session?.id !== id) {
           client.removeQueries({ queryKey: ['session', id] })
         }
@@ -53,16 +56,19 @@ export const useConnect = () => {
   useEffect(
     () => () => {
       const id = attempt.current
+
       attempt.current = null
       if (id) void client.cancelQueries({ queryKey: ['session', id] })
     },
     [client],
   )
 
-  const cancel = () => {
+  const cancel = (): void => {
     const id = attempt.current
+
     attempt.current = null
     if (id) void client.cancelQueries({ queryKey: ['session', id] })
+
     mutation.reset()
   }
 
@@ -70,9 +76,10 @@ export const useConnect = () => {
   const message =
     error && !isAborted(error) && !isCancelledError(error) ? getErrorMessage(error) : null
 
-  const connect = (input: Connection) => {
+  const connect = (): void => {
     if (client.isMutating({ mutationKey: ['connect'] })) return
-    mutation.mutate(input)
+
+    mutation.mutate()
   }
 
   return { connect, isPending: mutation.isPending, error: message, cancel }

@@ -1,5 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
-import { apiError, isRecord, request, type Connection } from '@/shared/api'
+
+import { apiError, isRecord, request } from '@/shared/api'
+
 import type { Settings } from '../model/settings'
 
 const defaults = {
@@ -9,13 +11,13 @@ const defaults = {
   refetchOnReconnect: false,
 }
 
-export const stateQuery = (connection: Connection, sessionId: string) =>
+export const stateQuery = (sessionId: string) =>
   queryOptions({
     ...defaults,
     queryKey: ['session', sessionId, 'state'],
     networkMode: 'always',
-    queryFn: async ({ signal }) => {
-      const data = await request(connection, 'getStateInstance', { signal })
+    queryFn: async ({ signal }): Promise<string> => {
+      const data = await request('getStateInstance', { signal })
 
       if (!isRecord(data) || typeof data.stateInstance !== 'string' || !data.stateInstance) {
         throw apiError('response', 'Не удалось определить состояние инстанса.')
@@ -25,13 +27,13 @@ export const stateQuery = (connection: Connection, sessionId: string) =>
     },
   })
 
-export const settingsQuery = (connection: Connection, sessionId: string) =>
+export const settingsQuery = (sessionId: string) =>
   queryOptions({
     ...defaults,
     queryKey: ['session', sessionId, 'settings'],
     networkMode: 'always',
     queryFn: async ({ signal }): Promise<Settings> => {
-      const data = await request(connection, 'getSettings', { signal })
+      const data = await request('getSettings', { signal })
 
       if (
         !isRecord(data) ||

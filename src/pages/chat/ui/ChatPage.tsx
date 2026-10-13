@@ -1,12 +1,16 @@
+import type { JSX } from 'react'
 import { useState } from 'react'
+
+import { ChatList, getChatName, MessageList, useChatStore } from '@/entities/chat'
 import { NewChatForm } from '@/features/create-chat'
-import { MessageComposer } from '@/features/send-message'
 import { useReceiveMessages } from '@/features/receive-messages'
-import { ChatList, MessageList, getChatName, useChatStore } from '@/entities/chat'
+import { MessageComposer } from '@/features/send-message'
 import { Button } from '@/shared/ui/button'
+
 import styles from './ChatPage.module.css'
 
-type Props = { onSignOut: () => void }
+type ChatPageProps = { onSignOut: () => void }
+
 const connectionLabels = {
   connecting: 'Проверяем подключение…',
   connected: 'WhatsApp подключён',
@@ -14,7 +18,7 @@ const connectionLabels = {
   paused: 'Получение приостановлено',
 }
 
-export const ChatPage = ({ onSignOut }: Props) => {
+export const ChatPage = ({ onSignOut }: ChatPageProps): JSX.Element => {
   const [isCreating, setIsCreating] = useState(false)
   const chat = useChatStore((state) => state.chats.find((item) => item.id === state.activeChatId))
   const selectChat = useChatStore((state) => state.selectChat)

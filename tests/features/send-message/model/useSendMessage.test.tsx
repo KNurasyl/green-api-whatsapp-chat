@@ -1,14 +1,15 @@
-import { useEffect, type PropsWithChildren } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { type PropsWithChildren, useEffect } from 'react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
-import { ChatProvider, MessageList, findChat, useChatStore, useChatStoreApi } from '@/entities/chat'
-import { useSession } from '@/entities/session'
-import { apiError } from '@/shared/api'
-import { sendMessage } from '../api/sendMessage'
-import { MessageComposer } from '../ui/MessageComposer'
 
-vi.mock('../api/sendMessage', () => ({ sendMessage: vi.fn() }))
+import { ChatProvider, findChat, MessageList, useChatStore, useChatStoreApi } from '@/entities/chat'
+import { useSession } from '@/entities/session'
+import { sendMessage } from '@/features/send-message/api/sendMessage'
+import { MessageComposer } from '@/features/send-message/ui/MessageComposer'
+import { apiError } from '@/shared/api'
+
+vi.mock('@/features/send-message/api/sendMessage', () => ({ sendMessage: vi.fn() }))
 
 const firstChat = '79990000000@c.us'
 const secondChat = '79991111111@c.us'
@@ -57,14 +58,7 @@ const submit = (text: string) => {
 }
 
 beforeEach(() => {
-  useSession.getState().open(
-    {
-      apiUrl: 'https://api.green-api.com',
-      idInstance: '123',
-      apiTokenInstance: 'test-token',
-    },
-    'test-session',
-  )
+  useSession.getState().open('test-session')
 })
 
 afterEach(() => {
@@ -76,18 +70,21 @@ afterEach(() => {
 
 it('keeps an uncertain send visible after leaving and reopening the chat', async () => {
   let rejectSend: (reason: Error) => void = () => {}
+
   vi.mocked(sendMessage).mockReturnValue(
     new Promise<string>((_, reject) => {
       rejectSend = reject
     }),
   )
   const { rerender } = render(<Conversation chatId={firstChat} />, { wrapper: Wrapper })
+
   submit('Проверить отправку')
   await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1))
 
   rerender(<Conversation chatId={null} />)
   await act(() => {
     rejectSend(apiError('network', 'Нет ответа'))
+
     return Promise.resolve()
   })
   rerender(<Conversation chatId={firstChat} />)
@@ -110,6 +107,7 @@ it('replaces the previous attempt only when the user sends again', async () => {
     .mockRejectedValueOnce(apiError('timeout', 'Нет ответа'))
     .mockResolvedValueOnce('sent-message')
   const { rerender } = render(<Conversation chatId={firstChat} />, { wrapper: Wrapper })
+
   submit('Первое сообщение')
   await screen.findByRole('alert')
 
@@ -131,6 +129,7 @@ it('replaces the previous attempt only when the user sends again', async () => {
 
 it('places a sent message before a reply that arrived before its HTTP response', async () => {
   let resolveSend: (id: string) => void = () => {}
+
   vi.mocked(sendMessage).mockReturnValue(
     new Promise<string>((resolve) => {
       resolveSend = resolve
@@ -144,9 +143,11 @@ it('places a sent message before a reply that arrived before its HTTP response',
 
   await act(() => {
     resolveSend('question')
+
     return Promise.resolve()
   })
 
   const messages = screen.getByRole('list', { name: 'Сообщения' }).querySelectorAll('li > p')
+
   expect(Array.from(messages, (item) => item.textContent)).toEqual(['Вопрос', 'Ответ'])
 })

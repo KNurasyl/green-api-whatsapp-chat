@@ -2,12 +2,13 @@ import { getErrorMessage, isApiError } from '@/shared/api'
 
 export const getMessageError = (text: string): string | null => {
   if (!text.trim()) return 'Введите сообщение'
+
   if (text.length > 20_000) return 'Сообщение слишком длинное'
 
   return null
 }
 
-export const getSendError = (error: unknown) => {
+export const getSendError = (error: unknown): string => {
   if (
     isApiError(error) &&
     (error.kind === 'network' ||

@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import type { Notification } from '@/features/receive-messages/api/notification'
+import { canRetry, retryDelay } from '@/features/receive-messages/lib/retry'
+import { pollNotifications } from '@/features/receive-messages/model/poll'
 import { apiError } from '@/shared/api'
 import { delay } from '@/shared/lib/delay'
-import { canRetry, retryDelay } from '../lib/retry'
-import type { Notification } from '../api/notification'
-import { pollNotifications } from './poll'
 
 afterEach(() => vi.useRealTimers())
 
@@ -24,6 +25,7 @@ describe('recovery', () => {
     const result = expect(delay(15_000, controller.signal)).rejects.toMatchObject({
       name: 'AbortError',
     })
+
     controller.abort()
     await result
     expect(vi.getTimerCount()).toBe(0)
@@ -38,6 +40,7 @@ describe('recovery', () => {
       .mockRejectedValueOnce(apiError('http', '', 429, 3000))
       .mockImplementation(() => {
         controller.abort()
+
         return Promise.resolve(null)
       })
     const result = expect(
@@ -49,6 +52,7 @@ describe('recovery', () => {
         afterEvent: () => Promise.resolve(),
       }),
     ).rejects.toMatchObject({ name: 'AbortError' })
+
     await vi.advanceTimersByTimeAsync(999)
     expect(receive).toHaveBeenCalledTimes(1)
     await vi.advanceTimersByTimeAsync(1)
@@ -78,6 +82,7 @@ describe('recovery', () => {
         afterEvent: () => Promise.resolve(),
       }),
     ).rejects.toThrow('Получение приостановлено')
+
     await vi.advanceTimersByTimeAsync(3000)
     await result
     expect(receive).toHaveBeenCalledTimes(1)
