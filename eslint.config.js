@@ -16,6 +16,11 @@ export default defineConfig([
     },
     rules: {
       eqeqeq: ['error', 'always'],
+      'no-restricted-syntax': [
+        'error',
+        { selector: 'FunctionDeclaration', message: 'Use an arrow function.' },
+        { selector: 'FunctionExpression', message: 'Use an arrow function.' },
+      ],
     },
   },
   {

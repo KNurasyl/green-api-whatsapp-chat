@@ -1,4 +1,4 @@
-export default function App() {
+export const App = () => {
   return (
     <main className="welcome">
       <p className="welcome-label">GREEN-API</p>
