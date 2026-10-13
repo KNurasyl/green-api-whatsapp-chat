@@ -10,6 +10,9 @@ export default defineConfig({
     },
   },
   test: {
-    environment: 'node',
+    projects: [
+      { test: { name: 'unit', environment: 'node', include: ['src/**/*.test.ts'] } },
+      { test: { name: 'ui', environment: 'jsdom', include: ['src/**/*.test.tsx'] } },
+    ],
   },
 })
