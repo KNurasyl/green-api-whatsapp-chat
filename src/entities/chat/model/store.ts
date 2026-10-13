@@ -9,15 +9,18 @@ export type ChatState = {
   openChat: (input: ChatInput, select?: boolean) => string
   selectChat: (id: string | null) => void
   setDraft: (id: string, text: string) => void
-  addMessage: (id: string, message: Message) => void
-  confirmSend: (id: string, message: Message) => void
+  reserveOrder: () => number
+  addMessage: (id: string, message: Message, order?: number) => void
+  confirmSend: (id: string, message: Message, order?: number) => void
   setMessageStatus: (id: string, messageId: string, delivery: Delivery) => void
 }
 
-export const createChatStore = () =>
-  createStore<ChatState>()((set, get) => ({
+export const createChatStore = () => {
+  let order = 0
+  return createStore<ChatState>()((set, get) => ({
     chats: [],
     activeChatId: null,
+    reserveOrder: () => order++,
     setMessageStatus: (id, messageId, delivery) =>
       set((state) => {
         const chat = findChat(state.chats, id)
@@ -30,8 +33,8 @@ export const createChatStore = () =>
           chats: state.chats.map((item) => (item.id === chat.id ? { ...item, statuses } : item)),
         }
       }),
-    confirmSend: (id, message) => {
-      get().addMessage(id, message)
+    confirmSend: (id, message, order) => {
+      get().addMessage(id, message, order)
       const chat = findChat(get().chats, id)
       if (chat?.draft === message.text) get().setDraft(id, '')
     },
@@ -51,16 +54,18 @@ export const createChatStore = () =>
           chats: state.chats.map((item) => (item.id === chat.id ? { ...item, draft: text } : item)),
         }
       }),
-    addMessage: (id, message) =>
+    addMessage: (id, message, order) =>
       set((state) => {
         const chat = findChat(state.chats, id)
         if (!chat || chat.messages.some((item) => item.id === message.id)) return state
 
-        const messages = [...chat.messages, message].sort(
-          (first, second) => first.timestamp - second.timestamp,
-        )
+        const messages = [
+          ...chat.messages,
+          { ...message, order: order ?? get().reserveOrder() },
+        ].sort((first, second) => first.order - second.order)
         return {
           chats: state.chats.map((item) => (item.id === chat.id ? { ...item, messages } : item)),
         }
       }),
   }))
+}

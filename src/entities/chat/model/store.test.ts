@@ -7,6 +7,57 @@ const lid = '123456789012345@lid'
 const message = { id: 'message-1', text: 'Привет', direction: 'incoming' as const, timestamp: 1000 }
 
 describe('chats', () => {
+  it.each([1_700_000_001_000, 1_700_001_801_000, 1_699_998_201_000])(
+    'keeps a reply after its outgoing message despite clock precision or skew: %s',
+    (timestamp) => {
+      const store = createChatStore()
+      store.getState().openChat({ apiChatId: phone })
+      store.getState().confirmSend(phone, {
+        id: 'question',
+        text: 'Вопрос',
+        direction: 'outgoing',
+        timestamp: 1_700_000_001_800,
+      })
+      store.getState().addMessage(phone, { ...message, id: 'reply', timestamp })
+
+      expect(store.getState().chats[0]?.messages.map((item) => item.id)).toEqual([
+        'question',
+        'reply',
+      ])
+    },
+  )
+
+  it('keeps the reserved send before a reply received while the request is pending', () => {
+    const store = createChatStore()
+    store.getState().openChat({ apiChatId: phone })
+    const order = store.getState().reserveOrder()
+    store.getState().addMessage(phone, { ...message, id: 'reply' })
+    store
+      .getState()
+      .confirmSend(
+        phone,
+        { ...message, id: 'question', direction: 'outgoing', timestamp: 1800 },
+        order,
+      )
+
+    expect(store.getState().chats[0]?.messages.map((item) => item.id)).toEqual([
+      'question',
+      'reply',
+    ])
+  })
+
+  it('preserves message order and the earliest copy when aliases merge', () => {
+    const store = createChatStore()
+    store.getState().openChat({ apiChatId: phone })
+    store.getState().addMessage(phone, { ...message, id: 'first', timestamp: 5000 })
+    store.getState().openChat({ apiChatId: lid })
+    store.getState().addMessage(lid, { ...message, id: 'second', timestamp: 1000 })
+    store.getState().addMessage(lid, { ...message, id: 'first', timestamp: 5000 })
+    store.getState().openChat({ apiChatId: lid, aliases: [phone] })
+
+    expect(store.getState().chats[0]?.messages.map((item) => item.id)).toEqual(['first', 'second'])
+  })
+
   it('clears only the sent draft and resolves its address after a chat merge', () => {
     const store = createChatStore()
     store.getState().openChat({ apiChatId: phone })
