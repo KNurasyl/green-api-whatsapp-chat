@@ -1,4 +1,5 @@
-import { apiError, isRecord, request, type Connection } from '@/shared/api'
+import { apiError, type Connection, isRecord, request } from '@/shared/api'
+
 import { getMessageError } from '../lib/message'
 
 export const sendMessage = async (
@@ -6,8 +7,9 @@ export const sendMessage = async (
   chatId: string,
   text: string,
   signal: AbortSignal,
-) => {
+): Promise<string> => {
   const error = getMessageError(text)
+
   if (error) throw apiError('validation', error)
 
   const data = await request(connection, 'sendMessage', {
@@ -15,6 +17,7 @@ export const sendMessage = async (
     body: { chatId, message: text },
     signal,
   })
+
   if (!isRecord(data) || typeof data.idMessage !== 'string' || !data.idMessage.trim()) {
     throw apiError('response', 'GREEN-API не вернул идентификатор сообщения.')
   }

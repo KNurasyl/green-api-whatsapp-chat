@@ -1,4 +1,5 @@
 import { afterEach, expect, it } from 'vitest'
+
 import { useSession } from '@/entities/session/model/store'
 
 const connection = {
@@ -12,6 +13,7 @@ afterEach(() => useSession.getState().close())
 it('cancels the old session before opening a new one', () => {
   useSession.getState().open(connection, 'first')
   const first = useSession.getState().session
+
   useSession.getState().open(connection, 'second')
 
   expect(first?.controller.signal.aborted).toBe(true)
@@ -22,6 +24,7 @@ it('cancels the old session before opening a new one', () => {
 it('drops credentials and cancels requests on exit', () => {
   useSession.getState().open(connection, 'first')
   const session = useSession.getState().session
+
   useSession.getState().close()
 
   expect(session?.controller.signal.aborted).toBe(true)

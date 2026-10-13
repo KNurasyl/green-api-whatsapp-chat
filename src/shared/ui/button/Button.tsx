@@ -1,7 +1,8 @@
-import type { ComponentProps } from 'react'
+import type { ComponentProps, JSX } from 'react'
+
 import styles from './Button.module.css'
 
-type Props = ComponentProps<'button'> & {
+type ButtonProps = ComponentProps<'button'> & {
   variant?: 'primary' | 'ghost'
 }
 
@@ -10,6 +11,6 @@ export const Button = ({
   className = '',
   type = 'button',
   ...props
-}: Props) => (
+}: ButtonProps): JSX.Element => (
   <button type={type} className={`${styles.button} ${styles[variant]} ${className}`} {...props} />
 )

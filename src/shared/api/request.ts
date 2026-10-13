@@ -38,7 +38,9 @@ export const request = async (
   const url = new URL(
     `${connection.apiUrl}/waInstance${connection.idInstance}/${method}/${connection.apiTokenInstance}`,
   )
+
   if (options.suffix !== undefined) url.pathname += `/${options.suffix}`
+
   for (const [key, value] of Object.entries(options.query ?? {})) url.searchParams.set(key, value)
 
   try {
@@ -59,18 +61,22 @@ export const request = async (
     }
 
     const text = await response.text()
+
     signal.throwIfAborted()
     if (!text.trim() && options.allowEmpty) return null
 
     try {
       const data: unknown = JSON.parse(text)
+
       return data
     } catch {
       throw apiError('response', 'GREEN-API вернул некорректный ответ.')
     }
   } catch (error) {
     if (options.signal?.aborted) throw new DOMException('Aborted', 'AbortError')
+
     if (controller.signal.aborted) throw apiError('timeout', 'Время ожидания ответа истекло.')
+
     if (isApiError(error)) throw error
 
     throw apiError(

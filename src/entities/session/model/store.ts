@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+
 import type { Connection } from '@/shared/api'
 
 export type Session = {

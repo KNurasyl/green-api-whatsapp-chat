@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+
 import { parseNotification } from '@/features/receive-messages/api/notification'
 
 const body = {
@@ -53,6 +54,7 @@ describe('notifications', () => {
       receiptId: 1,
       body: { ...body, messageData: { typeMessage, extendedTextMessageData: { text: 'Ответ' } } },
     }
+
     expect(parseNotification(data)?.event).toMatchObject({ message: { text: 'Ответ' } })
   })
 
@@ -65,6 +67,7 @@ describe('notifications', () => {
       },
       { typeWebhook: 'outgoingAPIMessageReceived' },
     ]
+
     for (const item of cases) {
       expect(parseNotification({ receiptId: 1, body: item })?.event).toEqual({ type: 'skip' })
     }
@@ -99,7 +102,9 @@ describe('notifications', () => {
       },
     }
     const event = parseNotification(data)?.event
+
     if (event?.type !== 'message') throw new Error('Expected a message')
+
     expect(event.message.text).toContain('Посмотрите его на телефоне')
   })
 })

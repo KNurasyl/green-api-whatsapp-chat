@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { normalizePhone } from '@/features/create-chat/lib/phone'
+
 import { checkWhatsapp } from '@/features/create-chat/api/checkWhatsapp'
+import { normalizePhone } from '@/features/create-chat/lib/phone'
 
 const connection = {
   apiUrl: 'https://api.green-api.com',
@@ -26,6 +27,7 @@ describe('new chat', () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockResolvedValue(Response.json({ existsWhatsapp: true, chatId: '12345@lid' }))
+
     vi.stubGlobal('fetch', fetchMock)
 
     await expect(

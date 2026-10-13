@@ -1,18 +1,23 @@
-import { useState, type FormEvent } from 'react'
+import type { JSX } from 'react'
+import { type FormEvent, useState } from 'react'
+
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
+
 import { useCreateChat } from '../model/useCreateChat'
+
 import styles from './NewChatForm.module.css'
 
-type Props = { onClose: () => void; disabled?: boolean }
+type NewChatFormProps = { onClose: () => void; disabled?: boolean }
 
-export const NewChatForm = ({ onClose, disabled = false }: Props) => {
+export const NewChatForm = ({ onClose, disabled = false }: NewChatFormProps): JSX.Element => {
   const [phone, setPhone] = useState('')
   const { createChat, isPending, error } = useCreateChat(onClose)
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault()
     if (disabled || isPending) return
+
     createChat(phone)
   }
 

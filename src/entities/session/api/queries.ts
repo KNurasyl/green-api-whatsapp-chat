@@ -1,5 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
-import { apiError, isRecord, request, type Connection } from '@/shared/api'
+
+import { apiError, type Connection, isRecord, request } from '@/shared/api'
+
 import type { Settings } from '../model/settings'
 
 const defaults = {
@@ -14,7 +16,7 @@ export const stateQuery = (connection: Connection, sessionId: string) =>
     ...defaults,
     queryKey: ['session', sessionId, 'state'],
     networkMode: 'always',
-    queryFn: async ({ signal }) => {
+    queryFn: async ({ signal }): Promise<string> => {
       const data = await request(connection, 'getStateInstance', { signal })
 
       if (!isRecord(data) || typeof data.stateInstance !== 'string' || !data.stateInstance) {

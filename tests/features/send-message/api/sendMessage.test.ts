@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { getMessageError, getSendError } from '@/features/send-message/lib/message'
+
 import { sendMessage } from '@/features/send-message/api/sendMessage'
+import { getMessageError, getSendError } from '@/features/send-message/lib/message'
 
 const connection = {
   apiUrl: 'https://api.green-api.com',
@@ -21,6 +22,7 @@ describe('send message', () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockResolvedValue(Response.json({ idMessage: 'message-1' }))
+
     vi.stubGlobal('fetch', fetchMock)
     await expect(
       sendMessage(connection, '12345@lid', ' Привет\nМир ', new AbortController().signal),
@@ -37,6 +39,7 @@ describe('send message', () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockRejectedValue(new TypeError('Network error with test-token'))
+
     vi.stubGlobal('fetch', fetchMock)
     const error = await sendMessage(
       connection,
@@ -58,6 +61,7 @@ describe('send message', () => {
       'Привет',
       new AbortController().signal,
     ).catch((value: unknown) => value)
+
     expect(getSendError(error)).toContain('Сообщение могло уйти')
   })
 })

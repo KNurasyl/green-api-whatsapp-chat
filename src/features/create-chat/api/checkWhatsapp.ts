@@ -1,7 +1,11 @@
 import { isDirectChat } from '@/entities/chat'
-import { apiError, isRecord, request, type Connection } from '@/shared/api'
+import { apiError, type Connection, isRecord, request } from '@/shared/api'
 
-export const checkWhatsapp = async (connection: Connection, phone: string, signal: AbortSignal) => {
+export const checkWhatsapp = async (
+  connection: Connection,
+  phone: string,
+  signal: AbortSignal,
+): Promise<string> => {
   const data = await request(connection, 'checkWhatsapp', {
     method: 'POST',
     body: { chatId: `${phone}@c.us` },

@@ -1,7 +1,8 @@
-import type { PropsWithChildren } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import type { PropsWithChildren } from 'react'
 import { afterEach, expect, it, vi } from 'vitest'
+
 import { useSession } from '@/entities/session'
 import { ConnectionForm } from '@/features/connect/ui/ConnectionForm'
 
@@ -28,6 +29,7 @@ it('requires authorization events before opening a session', async () => {
     .mockResolvedValueOnce(
       Response.json({ webhookUrl: '', incomingWebhook: 'yes', stateWebhook: 'yes' }),
     )
+
   vi.stubGlobal('fetch', fetch)
   render(<ConnectionForm />, { wrapper: Wrapper })
   fireEvent.change(screen.getByRole('textbox', { name: 'Адрес API' }), {

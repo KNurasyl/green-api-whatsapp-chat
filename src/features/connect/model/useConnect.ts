@@ -1,15 +1,23 @@
 import { isCancelledError, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
+
 import { checkSettings, settingsQuery, stateQuery, useSession } from '@/entities/session'
 import {
   apiError,
+  type Connection,
   getErrorMessage,
   isAborted,
   parseConnection,
-  type Connection,
 } from '@/shared/api'
 
-export const useConnect = () => {
+type Connect = {
+  connect: (input: Connection) => void
+  cancel: () => void
+  isPending: boolean
+  error: string | null
+}
+
+export const useConnect = (): Connect => {
   const client = useQueryClient()
   const attempt = useRef<string | null>(null)
   const open = useSession((state) => state.open)
@@ -18,9 +26,10 @@ export const useConnect = () => {
     retry: false,
     networkMode: 'always',
     gcTime: 0,
-    mutationFn: async (input: Connection) => {
+    mutationFn: async (input: Connection): Promise<void> => {
       const connection = parseConnection(input)
       const id = crypto.randomUUID()
+
       attempt.current = id
 
       try {
@@ -43,6 +52,7 @@ export const useConnect = () => {
         open(connection, id)
       } finally {
         if (attempt.current === id) attempt.current = null
+
         if (useSession.getState().session?.id !== id) {
           client.removeQueries({ queryKey: ['session', id] })
         }
@@ -53,16 +63,19 @@ export const useConnect = () => {
   useEffect(
     () => () => {
       const id = attempt.current
+
       attempt.current = null
       if (id) void client.cancelQueries({ queryKey: ['session', id] })
     },
     [client],
   )
 
-  const cancel = () => {
+  const cancel = (): void => {
     const id = attempt.current
+
     attempt.current = null
     if (id) void client.cancelQueries({ queryKey: ['session', id] })
+
     mutation.reset()
   }
 
@@ -70,8 +83,9 @@ export const useConnect = () => {
   const message =
     error && !isAborted(error) && !isCancelledError(error) ? getErrorMessage(error) : null
 
-  const connect = (input: Connection) => {
+  const connect = (input: Connection): void => {
     if (client.isMutating({ mutationKey: ['connect'] })) return
+
     mutation.mutate(input)
   }
 

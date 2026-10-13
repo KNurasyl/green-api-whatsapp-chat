@@ -1,12 +1,16 @@
+import type { JSX } from 'react'
 import { useLayoutEffect, useRef } from 'react'
-import type { Chat } from '../model/types'
+
 import { statusLabels } from '../model/status'
+import type { Chat } from '../model/types'
+
 import styles from './MessageList.module.css'
 
-type Props = { chat: Chat }
+type MessageListProps = { chat: Chat }
+
 const time = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' })
 
-export const MessageList = ({ chat }: Props) => {
+export const MessageList = ({ chat }: MessageListProps): JSX.Element => {
   const { messages, statuses } = chat
   const list = useRef<HTMLDivElement>(null)
   const followsLatest = useRef(true)
@@ -14,7 +18,9 @@ export const MessageList = ({ chat }: Props) => {
 
   useLayoutEffect(() => {
     const element = list.current
+
     if (!element || (!followsLatest.current && last?.direction !== 'outgoing')) return
+
     element.scrollTop = element.scrollHeight
   }, [last?.id, last?.direction])
 
@@ -24,6 +30,7 @@ export const MessageList = ({ chat }: Props) => {
       ref={list}
       onScroll={(event) => {
         const element = event.currentTarget
+
         followsLatest.current = element.scrollHeight - element.scrollTop - element.clientHeight < 80
       }}
     >
@@ -38,6 +45,7 @@ export const MessageList = ({ chat }: Props) => {
       >
         {messages.map((message) => {
           const status = statuses.get(message.id)?.status
+
           return (
             <li key={message.id} className={styles.message} data-direction={message.direction}>
               <p>{message.text}</p>

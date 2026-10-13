@@ -1,7 +1,10 @@
+import type { JSX } from 'react'
+
 import { ConnectionForm } from '@/features/connect'
+
 import styles from './ConnectPage.module.css'
 
-export const ConnectPage = () => (
+export const ConnectPage = (): JSX.Element => (
   <main className={styles.page}>
     <div className={styles.brand}>
       <span className={styles.mark}>G</span> GREEN-API <span> / чат</span>

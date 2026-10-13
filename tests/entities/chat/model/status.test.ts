@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+
 import { mergeDelivery } from '@/entities/chat/model/status'
 import { createChatStore } from '@/entities/chat/model/store'
 
@@ -33,6 +34,7 @@ describe('delivery status', () => {
     const store = createChatStore()
     const phone = '79990000000@c.us'
     const lid = '123456789@lid'
+
     store.getState().openChat({ apiChatId: phone })
     store.getState().setMessageStatus(phone, 'message-1', { status: 'read', timestamp: 1000 })
     store.getState().openChat({ apiChatId: lid })

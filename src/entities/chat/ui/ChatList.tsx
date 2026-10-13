@@ -1,8 +1,11 @@
+import type { JSX } from 'react'
+
 import { getChatName } from '../model/chat'
 import { useChatStore } from '../model/useChatStore'
+
 import styles from './ChatList.module.css'
 
-export const ChatList = () => {
+export const ChatList = (): JSX.Element => {
   const chats = useChatStore((state) => state.chats)
   const activeId = useChatStore((state) => state.activeChatId)
   const selectChat = useChatStore((state) => state.selectChat)

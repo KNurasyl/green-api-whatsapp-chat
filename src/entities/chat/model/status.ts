@@ -20,7 +20,9 @@ export const mergeDelivery = (current: Delivery | undefined, next: Delivery): De
   const ranks: Partial<Record<MessageStatus, number>> = { sent: 1, delivered: 2, read: 3 }
   const before = ranks[current.status] ?? 0
   const after = ranks[next.status] ?? 0
+
   if (after > before && after >= 2) return next
+
   if (before >= 2 || (before && after && before > after)) return current
 
   return next.timestamp >= current.timestamp ? next : current

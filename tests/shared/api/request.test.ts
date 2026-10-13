@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
 import { parseConnection } from '@/shared/api/connection'
 import { request } from '@/shared/api/request'
 
@@ -38,6 +39,7 @@ describe('request', () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockResolvedValue(Response.json({ stateInstance: 'authorized' }))
+
     vi.stubGlobal('fetch', fetchMock)
 
     await expect(request(connection, 'getStateInstance')).resolves.toEqual({
@@ -84,6 +86,7 @@ describe('request', () => {
   it('does not make a request after cancellation', async () => {
     const controller = new AbortController()
     const fetchMock = vi.fn<typeof fetch>()
+
     vi.stubGlobal('fetch', fetchMock)
     controller.abort()
 
@@ -105,6 +108,7 @@ describe('request', () => {
           )
         }),
     )
+
     vi.stubGlobal('fetch', fetchMock)
     const result = expect(
       request(connection, 'getStateInstance', { timeout: 1000 }),

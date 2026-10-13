@@ -1,20 +1,25 @@
-import { useState, type FormEvent } from 'react'
+import type { JSX } from 'react'
+import { type FormEvent, useState } from 'react'
+
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
+
 import { useConnect } from '../model/useConnect'
+
 import styles from './ConnectionForm.module.css'
 
 const configuredUrl: unknown = import.meta.env.VITE_GREEN_API_URL
 
-export const ConnectionForm = () => {
+export const ConnectionForm = (): JSX.Element => {
   const [apiUrl, setApiUrl] = useState(typeof configuredUrl === 'string' ? configuredUrl : '')
   const [idInstance, setIdInstance] = useState('')
   const [apiTokenInstance, setToken] = useState('')
   const { connect, isPending, error, cancel } = useConnect()
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault()
     if (isPending) return
+
     connect({ apiUrl, idInstance, apiTokenInstance })
   }
 
