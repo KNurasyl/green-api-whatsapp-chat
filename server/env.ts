@@ -6,13 +6,19 @@ export type GreenConfig = {
   apiTokenInstance: string
 }
 
-export const readEnv = (env: Environment): GreenConfig => {
-  const apiUrl = env.GREEN_API_URL?.trim()
-  const idInstance = env.GREEN_API_INSTANCE_ID?.trim()
-  const apiTokenInstance = env.GREEN_API_TOKEN?.trim()
+export const readCredentials = (data: unknown): GreenConfig => {
+  if (typeof data !== 'object' || data === null) throw new Error('Укажите реквизиты GREEN-API.')
+
+  const apiUrl = 'apiUrl' in data && typeof data.apiUrl === 'string' ? data.apiUrl.trim() : ''
+  const idInstance =
+    'idInstance' in data && typeof data.idInstance === 'string' ? data.idInstance.trim() : ''
+  const apiTokenInstance =
+    'apiTokenInstance' in data && typeof data.apiTokenInstance === 'string'
+      ? data.apiTokenInstance.trim()
+      : ''
 
   if (!apiUrl || !idInstance || !apiTokenInstance) {
-    throw new Error('Заполните GREEN_API_URL, GREEN_API_INSTANCE_ID и GREEN_API_TOKEN в .env.')
+    throw new Error('Заполните адрес API, ID и токен инстанса.')
   }
 
   let url: URL
@@ -20,7 +26,7 @@ export const readEnv = (env: Environment): GreenConfig => {
   try {
     url = new URL(apiUrl)
   } catch {
-    throw new Error('Проверьте GREEN_API_URL в .env.')
+    throw new Error('Проверьте адрес API.')
   }
 
   const allowedHost = ['api.green-api.com', 'api.greenapi.com'].some(
@@ -37,12 +43,19 @@ export const readEnv = (env: Environment): GreenConfig => {
     url.search ||
     url.hash
   ) {
-    throw new Error('GREEN_API_URL должен содержать HTTPS-адрес из кабинета без пути и параметров.')
+    throw new Error('Укажите HTTPS-адрес GREEN-API из кабинета без пути и параметров.')
   }
 
   if (!/^\d+$/.test(idInstance) || !/^[a-zA-Z0-9_-]+$/.test(apiTokenInstance)) {
-    throw new Error('Проверьте GREEN_API_INSTANCE_ID и GREEN_API_TOKEN в .env.')
+    throw new Error('Проверьте ID и токен инстанса.')
   }
 
   return { apiUrl: url.origin, idInstance, apiTokenInstance }
 }
+
+export const readEnv = (env: Environment): GreenConfig =>
+  readCredentials({
+    apiUrl: env.GREEN_API_URL,
+    idInstance: env.GREEN_API_INSTANCE_ID,
+    apiTokenInstance: env.GREEN_API_TOKEN,
+  })

@@ -6,10 +6,10 @@ import { parseNotification } from '@/features/receive-messages/api/notification'
 
 import { createApi } from '../../server/api.ts'
 import type { Environment } from '../../server/env.ts'
-import { sendJson } from '../../server/http.ts'
+import { isRecord, sendJson } from '../../server/http.ts'
 
 const browserFetch = globalThis.fetch
-const headers = { 'X-Chat-Client': 'web' }
+const headers: Record<string, string> = { 'X-Chat-Client': 'web' }
 const env = {
   GREEN_API_URL: 'https://test.api.greenapi.com',
   GREEN_API_INSTANCE_ID: '123',
@@ -35,7 +35,23 @@ const withServer = async (
   if (!address || typeof address === 'string') throw new Error('Missing test server address')
 
   try {
-    await run(`http://127.0.0.1:${address.port}`)
+    const origin = `http://127.0.0.1:${address.port}`
+
+    delete headers['X-Chat-Session']
+    if (environment.GREEN_API_TOKEN) {
+      const response = await browserFetch(origin + '/api/session', {
+        method: 'POST',
+        headers: { 'X-Chat-Client': 'web', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ useEnv: true }),
+      })
+      const data: unknown = await response.json()
+
+      if (!isRecord(data) || typeof data.key !== 'string') throw new Error('Missing session key')
+
+      headers['X-Chat-Session'] = data.key
+    }
+
+    await run(origin)
   } finally {
     server.closeAllConnections()
     await new Promise<void>((resolve) => server.close(() => resolve()))
@@ -152,12 +168,12 @@ it.each([{}, { ...headers, Origin: 'https://evil.example' }])(
   },
 )
 
-it('returns a safe configuration error before contacting GREEN-API', async () => {
+it('rejects API calls without a session before contacting GREEN-API', async () => {
   await withServer(async (origin) => {
     const response = await browserFetch(origin + '/api/getStateInstance', { headers })
 
-    expect(response.status).toBe(503)
-    expect(await response.json()).toEqual({ error: 'configuration' })
+    expect(response.status).toBe(401)
+    expect(await response.json()).toEqual({ error: 'request' })
     expect(upstream).not.toHaveBeenCalled()
   }, {})
 })
@@ -366,4 +382,58 @@ it('rejects malformed successful responses without leaking their content', async
     expect(response.status).toBe(502)
     expect(await response.text()).not.toContain(env.GREEN_API_TOKEN)
   })
+})
+
+it('accepts form credentials without a server preset and invalidates the key on logout', async () => {
+  upstream.mockResolvedValue(Response.json({ stateInstance: 'authorized' }))
+
+  await withServer(async (origin) => {
+    const login = await browserFetch(origin + '/api/session', {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiUrl: env.GREEN_API_URL,
+        idInstance: '456',
+        apiTokenInstance: 'form-token',
+      }),
+    })
+    const data: unknown = await login.json()
+
+    if (!isRecord(data) || typeof data.key !== 'string') throw new Error('Missing session key')
+
+    const sessionHeaders = { ...headers, 'X-Chat-Session': data.key }
+    const state = await browserFetch(origin + '/api/getStateInstance', { headers: sessionHeaders })
+
+    expect(state.status).toBe(200)
+    expect(JSON.stringify(data)).not.toContain('form-token')
+    expect(upstream).toHaveBeenCalledWith(
+      new URL(env.GREEN_API_URL + '/waInstance456/getStateInstance/form-token'),
+      expect.anything(),
+    )
+
+    await browserFetch(origin + '/api/session', { method: 'DELETE', headers: sessionHeaders })
+    const afterLogout = await browserFetch(origin + '/api/getStateInstance', {
+      headers: sessionHeaders,
+    })
+
+    expect(afterLogout.status).toBe(401)
+  }, {})
+})
+
+it('rejects credentials pointing outside GREEN-API without making a request', async () => {
+  await withServer(async (origin) => {
+    const response = await browserFetch(origin + '/api/session', {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiUrl: 'https://evil.example',
+        idInstance: '123',
+        apiTokenInstance: 'secret',
+      }),
+    })
+
+    expect(response.status).toBe(400)
+    expect(await response.text()).not.toContain('secret')
+    expect(upstream).not.toHaveBeenCalled()
+  }, {})
 })

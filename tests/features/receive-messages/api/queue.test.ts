@@ -2,9 +2,7 @@ import { afterEach, expect, it, vi } from 'vitest'
 
 import { deleteNotification, receiveNotification } from '@/features/receive-messages/api/queue'
 
-const input = {
-  signal: new AbortController().signal,
-}
+const input = { key: 'test-key', signal: new AbortController().signal }
 
 afterEach(() => vi.unstubAllGlobals())
 

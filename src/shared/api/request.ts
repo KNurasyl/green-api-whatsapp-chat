@@ -3,6 +3,7 @@ import type { ApiMethod } from './types'
 
 type RequestOptions = {
   signal?: AbortSignal
+  key?: string
   method?: 'GET' | 'POST' | 'DELETE'
   body?: Record<string, unknown>
   timeout?: number
@@ -41,6 +42,7 @@ export const request = async (
       method: options.method ?? 'GET',
       headers: {
         'X-Chat-Client': 'web',
+        ...(options.key ? { 'X-Chat-Session': options.key } : {}),
         ...(options.body ? { 'Content-Type': 'application/json' } : {}),
       },
       body: options.body ? JSON.stringify(options.body) : undefined,

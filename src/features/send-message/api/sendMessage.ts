@@ -1,11 +1,11 @@
-import { apiError, isRecord, request } from '@/shared/api'
+import { apiError, type ApiSession, isRecord, request } from '@/shared/api'
 
 import { getMessageError } from '../lib/message'
 
 export const sendMessage = async (
   chatId: string,
   text: string,
-  signal: AbortSignal,
+  session: ApiSession,
 ): Promise<string> => {
   const error = getMessageError(text)
 
@@ -14,7 +14,7 @@ export const sendMessage = async (
   const data = await request('sendMessage', {
     method: 'POST',
     body: { chatId, message: text },
-    signal,
+    ...session,
   })
 
   if (!isRecord(data) || typeof data.idMessage !== 'string' || !data.idMessage.trim()) {

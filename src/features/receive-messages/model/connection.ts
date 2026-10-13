@@ -21,7 +21,7 @@ export const checkAuthorization = async (
   session: Session,
   signal: AbortSignal,
 ): Promise<void> => {
-  const query = stateQuery(session.id)
+  const query = stateQuery(session)
 
   await waitForQuery(client, query.queryKey, signal)
 
@@ -41,7 +41,7 @@ export const checkConnection = async (
 ): Promise<void> => {
   await checkAuthorization(client, session, signal)
 
-  const query = settingsQuery(session.id)
+  const query = settingsQuery(session)
 
   await waitForQuery(client, query.queryKey, signal)
 
