@@ -30,7 +30,7 @@ afterEach(() => {
 })
 
 it('keeps receiving paused until authorization events are enabled again', async () => {
-  useSession.getState().open('test-session')
+  useSession.getState().open('test-session', 'test-key')
   vi.mocked(receiveNotification)
     .mockRejectedValueOnce(apiError('response', 'Получение приостановлено'))
     .mockImplementation(

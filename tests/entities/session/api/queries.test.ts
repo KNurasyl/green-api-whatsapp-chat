@@ -6,8 +6,8 @@ import { settingsQuery, stateQuery } from '@/entities/session/api/queries'
 afterEach(() => vi.unstubAllGlobals())
 
 it('separates sessions without putting credentials in keys', () => {
-  const first = stateQuery('first')
-  const second = stateQuery('second')
+  const first = stateQuery({ id: 'first', key: 'test-key' })
+  const second = stateQuery({ id: 'second', key: 'test-key' })
 
   expect(first.queryKey).not.toEqual(second.queryKey)
   expect(first.queryKey).toEqual(['session', 'first', 'state'])
@@ -17,7 +17,9 @@ it('rejects a state response without a state', async () => {
   vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(Response.json({ result: true })))
   const client = new QueryClient()
 
-  await expect(client.fetchQuery(stateQuery('test'))).rejects.toMatchObject({
+  await expect(
+    client.fetchQuery(stateQuery({ id: 'test', key: 'test-key' })),
+  ).rejects.toMatchObject({
     kind: 'response',
   })
   client.clear()
@@ -39,7 +41,7 @@ it('reads WhatsApp settings without requiring typeInstance', async () => {
   )
   const client = new QueryClient()
 
-  await expect(client.fetchQuery(settingsQuery('test'))).resolves.toEqual({
+  await expect(client.fetchQuery(settingsQuery({ id: 'test', key: 'test-key' }))).resolves.toEqual({
     webhookUrl: '',
     incoming: true,
     stateChanges: true,
@@ -52,7 +54,9 @@ it('rejects incomplete settings', async () => {
   vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(Response.json({ webhookUrl: '' })))
   const client = new QueryClient()
 
-  await expect(client.fetchQuery(settingsQuery('test'))).rejects.toMatchObject({
+  await expect(
+    client.fetchQuery(settingsQuery({ id: 'test', key: 'test-key' })),
+  ).rejects.toMatchObject({
     kind: 'response',
   })
   client.clear()
@@ -69,7 +73,9 @@ it.each([undefined, 'unknown'])(
     )
     const client = new QueryClient()
 
-    await expect(client.fetchQuery(settingsQuery('test'))).rejects.toMatchObject({
+    await expect(
+      client.fetchQuery(settingsQuery({ id: 'test', key: 'test-key' })),
+    ).rejects.toMatchObject({
       kind: 'response',
     })
     client.clear()

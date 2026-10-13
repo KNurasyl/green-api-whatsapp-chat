@@ -19,7 +19,10 @@ describe('send message', () => {
 
     vi.stubGlobal('fetch', fetchMock)
     await expect(
-      sendMessage('12345@lid', ' Привет\nМир ', new AbortController().signal),
+      sendMessage('12345@lid', ' Привет\nМир ', {
+        signal: new AbortController().signal,
+        key: 'test-key',
+      }),
     ).resolves.toBe('message-1')
     expect(fetchMock).toHaveBeenCalledWith(
       expect.any(String),
@@ -35,9 +38,10 @@ describe('send message', () => {
       .mockRejectedValue(new TypeError('Network error with test-token'))
 
     vi.stubGlobal('fetch', fetchMock)
-    const error = await sendMessage('12345@lid', 'Привет', new AbortController().signal).catch(
-      (value: unknown) => value,
-    )
+    const error = await sendMessage('12345@lid', 'Привет', {
+      signal: new AbortController().signal,
+      key: 'test-key',
+    }).catch((value: unknown) => value)
 
     expect(getSendError(error)).toContain('Сообщение могло уйти')
     expect(getSendError(error)).not.toContain('test-token')
@@ -46,9 +50,10 @@ describe('send message', () => {
 
   it('treats a missing message id as an uncertain result', async () => {
     vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(Response.json({ result: true })))
-    const error = await sendMessage('12345@lid', 'Привет', new AbortController().signal).catch(
-      (value: unknown) => value,
-    )
+    const error = await sendMessage('12345@lid', 'Привет', {
+      signal: new AbortController().signal,
+      key: 'test-key',
+    }).catch((value: unknown) => value)
 
     expect(getSendError(error)).toContain('Сообщение могло уйти')
   })

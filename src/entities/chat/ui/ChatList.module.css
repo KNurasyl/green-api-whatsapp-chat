@@ -20,7 +20,7 @@
   background: var(--color-hover);
 }
 .chat[aria-current='true'] {
-  background: #e6f0e8;
+  background: #e9edff;
 }
 .avatar {
   display: grid;
@@ -28,8 +28,8 @@
   flex: 0 0 44px;
   height: 44px;
   border-radius: 50%;
-  background: #dfe9e1;
-  color: #3b6650;
+  background: #e8eafe;
+  color: #5460a8;
   font-weight: 600;
   font-size: 0.9rem;
 }

@@ -21,7 +21,7 @@ describe('request', () => {
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/getStateInstance',
       expect.objectContaining({
-        credentials: 'omit',
+        credentials: 'same-origin',
         headers: { 'X-Chat-Client': 'web' },
         method: 'GET',
       }),
@@ -96,18 +96,19 @@ describe('request', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 })
-it('explains a missing server configuration without echoing response data', async () => {
+it('hides server error details', async () => {
   vi.stubGlobal(
     'fetch',
     vi
       .fn<typeof fetch>()
       .mockResolvedValue(
-        Response.json({ error: 'configuration', secret: 'test-token' }, { status: 503 }),
+        Response.json({ error: 'request', secret: 'test-token' }, { status: 503 }),
       ),
   )
 
   await expect(request('getStateInstance')).rejects.toMatchObject({
-    kind: 'validation',
-    message: 'Настройте GREEN-API в серверном .env и перезапустите приложение.',
+    kind: 'http',
+    status: 503,
+    message: 'GREEN-API временно недоступен.',
   })
 })

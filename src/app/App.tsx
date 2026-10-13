@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { JSX } from 'react'
 
 import { ChatProvider } from '@/entities/chat'
-import { useSession } from '@/entities/session'
+import { closeSession, useSession } from '@/entities/session'
 import { ChatPage } from '@/pages/chat'
 import { ConnectPage } from '@/pages/connect'
 
@@ -13,6 +13,8 @@ export const App = (): JSX.Element => {
 
   const signOut = (): void => {
     session?.controller.abort()
+    if (session) void closeSession(session.key).catch(() => undefined)
+
     void client.cancelQueries()
     client.clear()
     close()

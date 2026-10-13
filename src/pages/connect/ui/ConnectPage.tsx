@@ -6,49 +6,24 @@ import styles from './ConnectPage.module.css'
 
 export const ConnectPage = (): JSX.Element => (
   <main className={styles.page}>
-    <div className={styles.brand}>
-      <span className={styles.mark}>G</span> GREEN-API <span> / чат</span>
-    </div>
-    <section className={styles.content}>
-      <div className={styles.intro}>
-        <span className={styles.eyebrow}>WHATSAPP · ЛИЧНЫЕ СООБЩЕНИЯ</span>
-        <h1>
-          Ближе.
-          <br />
-          Даже на расстоянии.
-        </h1>
-        <p>
-          Простой чат для ваших разговоров. Подключите WhatsApp, выберите собеседника и начните
-          общение.
-        </p>
-        <ol className={styles.steps}>
-          <li>
-            <span>01</span> Подключите свой инстанс
-          </li>
-          <li>
-            <span>02</span> Добавьте номер собеседника
-          </li>
-          <li>
-            <span>03</span> Отправьте первое сообщение
-          </li>
-        </ol>
+    <section className={styles.card} aria-labelledby="connect-title">
+      <div className={styles.mark} aria-hidden="true">
+        G
       </div>
-      <div className={styles.card}>
-        <div className={styles.cardTitle}>
-          <h2>Подключение</h2>
-          <p>Откройте чат с настроенным аккаунтом WhatsApp</p>
-        </div>
-        <ConnectionForm />
-        <a
-          className={styles.link}
-          href="https://console.green-api.com/instanceList"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Открыть кабинет GREEN-API ↗
-        </a>
-      </div>
+      <h1 id="connect-title">Войти в чат</h1>
+      <p className={styles.description}>
+        WhatsApp через GREEN-API. Введите реквизиты своего инстанса.
+      </p>
+      <ConnectionForm />
+      <a
+        className={styles.link}
+        href="https://console.green-api.com/instanceList"
+        target="_blank"
+        rel="noreferrer"
+      >
+        Открыть кабинет GREEN-API
+      </a>
     </section>
-    <p className={styles.footer}>Переписка доступна в текущей сессии и очищается при выходе.</p>
+    <p className={styles.footer}>Сообщения доступны в текущей сессии и очищаются при выходе.</p>
   </main>
 )
