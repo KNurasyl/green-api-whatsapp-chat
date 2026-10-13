@@ -10,6 +10,23 @@
   background: var(--color-panel);
   box-shadow: 0 10px 60px #203c2606;
 }
+.notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+  padding: 12px 24px;
+  background: #fff5dc;
+  font-size: 13px;
+}
+.notice p {
+  margin: 0;
+  line-height: 1.5;
+}
+.connection span[data-paused='true'] {
+  background: #bb8d35;
+}
 .sidebar {
   display: flex;
   flex-direction: column;

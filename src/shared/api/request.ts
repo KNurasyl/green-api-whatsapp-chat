@@ -7,6 +7,9 @@ type RequestOptions = {
   method?: 'GET' | 'POST' | 'DELETE'
   body?: Record<string, unknown>
   timeout?: number
+  query?: Record<string, string>
+  suffix?: number
+  allowEmpty?: boolean
 }
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -32,12 +35,16 @@ export const request = async (
     ? AbortSignal.any([controller.signal, options.signal])
     : controller.signal
   const timeout = setTimeout(() => controller.abort(), options.timeout ?? 15_000)
-  const url = `${connection.apiUrl}/waInstance${connection.idInstance}/${method}/${connection.apiTokenInstance}`
+  const url = new URL(
+    `${connection.apiUrl}/waInstance${connection.idInstance}/${method}/${connection.apiTokenInstance}`,
+  )
+  if (options.suffix !== undefined) url.pathname += `/${options.suffix}`
+  for (const [key, value] of Object.entries(options.query ?? {})) url.searchParams.set(key, value)
 
   try {
     signal.throwIfAborted()
 
-    const response = await fetch(url, {
+    const response = await fetch(url.toString(), {
       method: options.method ?? 'GET',
       headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
       body: options.body ? JSON.stringify(options.body) : undefined,
@@ -53,6 +60,7 @@ export const request = async (
 
     const text = await response.text()
     signal.throwIfAborted()
+    if (!text.trim() && options.allowEmpty) return null
 
     try {
       const data: unknown = JSON.parse(text)
