@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NewChatForm } from '@/features/create-chat'
-import { ChatList, getChatName, useChatStore } from '@/entities/chat'
+import { MessageComposer } from '@/features/send-message'
+import { ChatList, MessageList, getChatName, useChatStore } from '@/entities/chat'
 import { Button } from '@/shared/ui/button'
 import styles from './ChatPage.module.css'
 
@@ -60,13 +61,8 @@ export const ChatPage = ({ onSignOut }: Props) => {
                 <p>Личный чат · WhatsApp</p>
               </div>
             </header>
-            <div className={styles.empty}>
-              <span className={styles.symbol} aria-hidden="true">
-                ↗
-              </span>
-              <h2>Начало разговора</h2>
-              <p>Пока здесь нет сообщений.</p>
-            </div>
+            <MessageList key={chat.id} messages={chat.messages} />
+            <MessageComposer chat={chat} />
           </>
         ) : (
           <div className={styles.empty}>
