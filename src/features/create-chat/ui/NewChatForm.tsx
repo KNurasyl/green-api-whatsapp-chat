@@ -4,14 +4,15 @@ import { Input } from '@/shared/ui/input'
 import { useCreateChat } from '../model/useCreateChat'
 import styles from './NewChatForm.module.css'
 
-type Props = { onClose: () => void }
+type Props = { onClose: () => void; disabled?: boolean }
 
-export const NewChatForm = ({ onClose }: Props) => {
+export const NewChatForm = ({ onClose, disabled = false }: Props) => {
   const [phone, setPhone] = useState('')
   const { createChat, isPending, error } = useCreateChat(onClose)
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (disabled || isPending) return
     createChat(phone)
   }
 
@@ -33,7 +34,7 @@ export const NewChatForm = ({ onClose }: Props) => {
         </p>
       )}
       <div className={styles.actions}>
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit" disabled={disabled || isPending}>
           {isPending ? 'Проверяем…' : 'Открыть чат'}
         </Button>
         <Button variant="ghost" onClick={onClose} disabled={isPending}>
